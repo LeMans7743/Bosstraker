@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSS重生時間追蹤器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .boss-btn.selected { background-color: #4f46e5; color: white; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4"><div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-6 flex flex-col items-center space-y-4">
+    <div class="w-full text-center">
+        <h1 class="text-3xl font-bold text-gray-800">BOSS重生追蹤器</h1>
+        <p class="text-sm text-gray-500 mt-1">追蹤多個BOSS的重生時間</p>
+    </div><div class="w-full bg-gray-50 p-5 rounded-xl shadow-inner">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">新增追蹤項目</h2>
+    <form id="add-boss-form" class="space-y-4">
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">BOSS名稱</label>
+            <div id="boss-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <button type="button" data-boss-name="雪毛怪人" class="boss-btn p-3 border border-gray-300 rounded-md text-sm">雪毛怪人</button>
+                <button type="button" data-boss-name="咕咕鐘" class="boss-btn p-3 border border-gray-300 rounded-md text-sm">咕咕鐘</button>
+                <button type="button" data-boss-name="測試王" class="boss-btn p-3 border border-gray-300 rounded-md text-sm">測試王</button>
+            </div>
+            <input type="hidden" id="boss-name" required>
+        </div>
+        <div class="flex space-x-4">
+            <div class="flex-1">
+                <label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道 (僅數字)</label>
+                <input type="number" id="boss-channel" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm" min="0">
+            </div>
+        </div>
+        <button type="submit" class="w-full py-2 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
+    </form>
+</div>
+
+<div class="w-full">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">追蹤列表</h2>
+    <div id="boss-list" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+</div>
+
+</div><div id="message-box" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-6 py-3 rounded-full shadow-lg z-50 opacity-0 transition-opacity duration-300">載入中...</div><script>
+const bossButtons = document.querySelectorAll('.boss-btn');
+const bossInput = document.getElementById('boss-name');
+const bossList = document.getElementById('boss-list');
+
+const BOSS_RESPAWN = {
+    '雪毛怪人': 45,
+    '咕咕鐘': 60,
+    '測試王': 0.1
+};
+
+let bosses = [];
+
+bossButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        bossButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        bossInput.value = btn.dataset.bossName;
+    });
+});
+
+function notifyBOSS(bossName, channel) {
+    // 這裡是 Android App 專用通知
+    if (window.AndroidApp && typeof window.AndroidApp.notify === 'function') {
+        window.AndroidApp.notify(`頻道 ${channel} 的 ${bossName} 已重生！`);
+    } else if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            new Notification('BOSS已重生', { body: `頻道 ${channel} 的 ${bossName} 已重生！` });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('BOSS已重生', { body: `頻道 ${channel} 的 ${bossName} 已重生！` });
+                }
+            });
+        }
+    } else {
+        console.log(`通知: 頻道 ${channel} 的 ${bossName} 已重生！`);
+    }
+}
+
+function renderBossList() {
+    bossList.innerHTML = '';
+    bosses.sort((a, b) => a.respawnTime - b.respawnTime);
+    bosses.forEach(boss => {
+        const bossItem = document.createElement('div');
+        bossItem.className = 'bg-gray-50 rounded-xl shadow-lg p-4 flex flex-col space-y-2';
+        bossItem.innerHTML = `
+            <p class="font-bold">${boss.name}</p>
+            <p class="text-sm text-gray-500">頻道: ${boss.channel}</p>
+            <p class="text-sm text-gray-500">BOSS重生時間: <span class="respawn-time">${boss.respawnTime.toLocaleTimeString()}</span></p>
+            <p class="text-sm text-gray-500">倒數計時: <span class="countdown">${boss.remainingText}</span></p>
+            <div class="flex space-x-2 mt-2">
+                <button class="reset-btn px-3 py-1 text-sm rounded bg-green-600 text-white">重置</button>
+                <button class="delete-btn px-3 py-1 text-sm rounded bg-red-600 text-white">刪除</button>
+            </div>
+        `;
+        bossList.appendChild(bossItem);
+
+        const countdownEl = bossItem.querySelector('.countdown');
+        const interval = setInterval(() => {
+            const now = new Date();
+            let diff = (boss.respawnTime - now) / 1000;
+            if (diff <= 0) {
+                countdownEl.textContent = 'BOSS已重生！';
+                notifyBOSS(boss.name, boss.channel);
+                clearInterval(interval);
+            } else {
+                const minutes = Math.floor(diff / 60);
+                const seconds = Math.floor(diff % 60);
+                countdownEl.textContent = `${minutes}分${seconds}秒`;
+            }
+        }, 1000);
+
+        bossItem.querySelector('.delete-btn').addEventListener('click', () => {
+            bosses = bosses.filter(b => !(b.name === boss.name && b.channel === boss.channel));
+            renderBossList();
+        });
+
+        bossItem.querySelector('.reset-btn').addEventListener('click', () => {
+            const spawnTime = BOSS_RESPAWN[boss.name];
+            boss.respawnTime = new Date(new Date().getTime() + spawnTime * 60 * 1000);
+            boss.remainingText = `${spawnTime.toFixed(1)} 分鐘`;
+            renderBossList();
+        });
+    });
+}
+
+document.getElementById('add-boss-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const bossName = bossInput.value;
+    const channel = document.getElementById('boss-channel').value;
+    if (!bossName) { alert('請選擇BOSS'); return; }
+    if (!channel) { alert('請填寫頻道'); return; }
+
+    const existingBoss = bosses.find(b => b.name === bossName && b.channel === channel);
+    const spawnTime = BOSS_RESPAWN[bossName];
+    const respawnTime = new Date(new Date().getTime() + spawnTime * 60 * 1000);
+
+    if (existingBoss) {
+        existingBoss.respawnTime = respawnTime;
+        existingBoss.remainingText = `${spawnTime.toFixed(1)} 分鐘`;
+    } else {
+        bosses.push({ name: bossName, channel: channel, respawnTime: respawnTime, remainingText: `${spawnTime.toFixed(1)} 分鐘` });
+    }
+
+    renderBossList();
+
+    bossInput.value = '';
+    document.getElementById('boss-channel').value = '';
+    bossButtons.forEach(b => b.classList.remove('selected'));
+});
+</script></body>
+</html>
