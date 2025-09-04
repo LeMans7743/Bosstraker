@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
+<!DOCTYPE html><html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,16 +17,11 @@ body { font-family: 'Inter', sans-serif; }
 </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-4">
-<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4">
-
-<div class="w-full">
+<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4"><div class="w-full">
 <h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
 <div id="boss-list" class="flex flex-col gap-1"></div>
-</div>
-
-<div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
+</div><div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
 <h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
-<button id="request-notification" class="mb-2 px-3 py-1 rounded bg-blue-500 text-white text-sm">啟用通知</button>
 <form id="add-boss-form" class="space-y-2">
 <div class="space-y-1">
 <label class="block text-sm font-medium text-gray-700">BOSS名稱</label>
@@ -45,65 +39,49 @@ body { font-family: 'Inter', sans-serif; }
 </div>
 </div>
 <button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
-</form>
+</form><div class="mt-4">
+<button id="test-notify" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">測試通知</button>
 </div>
-
-</div>
+</div></div>
 <script>
-let notificationsEnabled = false;
 const bossButtons = document.querySelectorAll('.boss-btn');
 const bossInput = document.getElementById('boss-name');
 const bossList = document.getElementById('boss-list');
 const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
-let selectedBoss = null;
+let selectedBoss = null;// 啟用通知權限 if ("Notification" in window && Notification.permission !== "granted") { Notification.requestPermission(); }
 
-// 啟用通知
-document.getElementById('request-notification').addEventListener('click', ()=>{
-    if('Notification' in window){
-        Notification.requestPermission().then(permission => {
-            notificationsEnabled = permission === 'granted';
-            alert(notificationsEnabled ? '通知已啟用' : '通知被封鎖');
-        });
-    } else alert('瀏覽器不支援通知');
-});
+document.getElementById("test-notify").addEventListener("click", () => { if ("Notification" in window && Notification.permission === "granted") { new Notification("測試通知", { body: "這是一則測試通知" }); } else { alert("通知權限未開啟"); } });
 
-bossButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected'));
-        btn.classList.add('selected');
-        bossInput.value = btn.dataset.bossName;
-        selectedBoss = btn.dataset.bossName;
-    });
-});
+bossButtons.forEach(btn => { btn.addEventListener('click', () => { if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); bossInput.value = btn.dataset.bossName; selectedBoss = btn.dataset.bossName; }); });
 
-document.getElementById('add-boss-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const bossName = bossInput.value;
-    const channel = document.getElementById('boss-channel').value;
-    if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
+document.getElementById('add-boss-form').addEventListener('submit', e => { e.preventDefault(); const bossName = bossInput.value; const channel = document.getElementById('boss-channel').value; if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
 
-    const spawnTime = BOSS_RESPAWN[bossName];
-    const now = new Date();
-    let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
+const spawnTime = BOSS_RESPAWN[bossName];
+const now = new Date();
+let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
 
-    const bossItem = document.createElement('div');
-    bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
-    bossItem.dataset.respawn = respawnTime.getTime();
+const bossItem = document.createElement('div');
+bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
+bossItem.dataset.respawn = respawnTime.getTime();
 
-    bossItem.innerHTML=`
+bossItem.innerHTML=`
+
 <p class="font-bold">${bossName}</p>
 <p class="text-sm text-gray-500">頻道: ${channel}</p>
 <p class="text-sm text-gray-500">預估重生時間: <span class="respawn-time">${respawnTime.toLocaleTimeString()}</span></p>
 <p class="text-sm text-gray-500">倒數計時: <span class="countdown">${spawnTime.toFixed(1)} 分鐘</span></p>
 <div class="flex gap-1">
-<button class="kill-btn px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">已擊殺</button>
+<button class="reset-btn px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">已擊殺</button>
 <button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
-</div>`;
+</div>`;bossList.prepend(bossItem);
 
-    bossList.prepend(bossItem);
+const countdownEl = bossItem.querySelector('.countdown');
+const respawnEl = bossItem.querySelector('.respawn-time');
+let interval;
 
-    const countdownEl = bossItem.querySelector('.countdown');
-    let interval = setInterval(()=>{
+function startCountdown() {
+    clearInterval(interval);
+    interval = setInterval(()=>{
         const now=new Date();
         let diff=(respawnTime-now)/1000;
         bossItem.classList.remove('flash-blue','flash-red');
@@ -111,8 +89,9 @@ document.getElementById('add-boss-form').addEventListener('submit', e => {
             countdownEl.textContent='BOSS已重生！';
             bossItem.style.backgroundColor='#22c55e';
             clearInterval(interval);
-            if(notificationsEnabled){
-                new Notification(`${bossName}已重生`, {body:`頻道 ${channel} 的 ${bossName} 現在可以再次討伐！`});
+            // 發送通知
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(`${bossName} 在 頻道${channel} 已重生！`);
             }
         }else{
             const minutes=Math.floor(diff/60);
@@ -122,19 +101,24 @@ document.getElementById('add-boss-form').addEventListener('submit', e => {
             else if(diff<=300) bossItem.classList.add('flash-blue');
         }
     },1000);
+}
 
-    bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove();clearInterval(interval);});
-    bossItem.querySelector('.kill-btn').addEventListener('click',()=>{
-        const now=new Date();
-        respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-        bossItem.dataset.respawn = respawnTime.getTime();
-        bossItem.querySelector('.respawn-time').textContent=respawnTime.toLocaleTimeString();
-        bossItem.style.backgroundColor='';
-    });
+startCountdown();
 
-    bossInput.value='';
-    document.getElementById('boss-channel').value='';
+bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove(); clearInterval(interval);});
+bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
+    const now=new Date();
+    respawnTime = new Date(now.getTime()+spawnTime*60*1000);
+    bossItem.dataset.respawn = respawnTime.getTime();
+    respawnEl.textContent=respawnTime.toLocaleTimeString();
+    bossItem.style.backgroundColor='';
+    startCountdown();
 });
-</script>
+
+bossInput.value='';
+document.getElementById('boss-channel').value='';
+
+}); </script>
+
 </body>
 </html>
