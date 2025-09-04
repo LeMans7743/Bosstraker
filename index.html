@@ -65,16 +65,19 @@
         };
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
-        
-        // VAPID 金鑰
-        const vapidKey = "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc";
 
+        // 註冊服務工作檔並取得 FCM Token
         async function requestPermission() {
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    const token = await messaging.getToken({ vapidKey: vapidKey });
+                    // 註冊服務工作檔
+                    const registration = await navigator.serviceWorker.register('./Bosstraker/firebase-messaging-sw.js');
+                    messaging.useServiceWorker(registration);
+                    
+                    const token = await messaging.getToken({ vapidKey: "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc" });
                     console.log('FCM Token:', token);
+                    // 實際應用中，你需要將這個 token 發送到伺服器，由伺服器發送推送通知
                 } else {
                     console.log('無法取得通知權限。');
                 }
@@ -89,11 +92,11 @@
         const bossList = document.getElementById('boss-list');
         const lockBtn = document.getElementById('lock-btn');
         const unlockBtn = document.getElementById('unlock-btn');
-        // 修正測試王的時間為 5-10 秒
         const BOSS_TIMES = { '雪毛怪人': [45, 68], '咕咕鐘': [68, 90], '測試王': [5 / 60, 10 / 60] };
         let selectedBoss = null;
         let lockedBoss = null;
 
+        // 鎖定/解鎖按鈕邏輯
         lockBtn.addEventListener('click', () => {
             if (!selectedBoss) {
                 alert('請先選擇一個 BOSS！');
@@ -119,6 +122,7 @@
             alert('已解除鎖定');
         });
 
+        // 選擇 BOSS 按鈕邏輯
         bossButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (!lockedBoss) {
@@ -149,7 +153,6 @@
             const countdownEl = bossItem.querySelector('.countdown');
             let minRespawn = minRespawnTime;
             let maxRespawn = maxRespawnTime;
-            let notificationSent = false;
 
             function updateCountdown() {
                 const now = new Date();
@@ -161,17 +164,10 @@
                     const s = Math.floor(diff % 60);
                     countdownEl.textContent = `${m}分${s}秒`;
                     currentBgClass = 'bg-green-500';
-                    notificationSent = false;
                 } else {
                     diff = (maxRespawn - now) / 1000;
                     if (diff > 0) {
                         currentBgClass = 'bg-orange-400';
-                        if (!notificationSent) {
-                            new Notification('BOSS 提醒', { body: `${bossName} 在頻道 ${channel} 即將重生！` });
-                            notificationSent = true;
-                            bossItem.classList.add('flash-blue');
-                            setTimeout(() => { bossItem.classList.remove('flash-blue'); }, 1000);
-                        }
                         const m = Math.floor(diff / 60);
                         const s = Math.floor(diff % 60);
                         countdownEl.textContent = `重生中 ${m}分${s}秒`;
@@ -199,7 +195,6 @@
                 const [minTime, maxTime] = BOSS_TIMES[bossName];
                 minRespawn = new Date(now.getTime() + minTime * 60 * 1000);
                 maxRespawn = new Date(now.getTime() + maxTime * 60 * 1000);
-                notificationSent = false;
                 clearInterval(interval);
                 interval = setInterval(updateCountdown, 1000);
                 updateCountdown();
@@ -214,7 +209,6 @@
             const bossName = bossInput.value;
             const channel = document.getElementById('boss-channel').value;
 
-            // 修正：檢查 bossName 是否已選
             if (!bossName) {
                 alert('請先選擇一個 BOSS！');
                 return;
@@ -224,20 +218,18 @@
                 return;
             }
 
-            // 修正：檢查是否已存在相同頻道
             let existingItem = document.querySelector(`[data-boss-name="${bossName}"][data-channel="${channel}"]`);
             if (existingItem) {
                 alert('該 BOSS 頻道已存在，將更新重生時間。');
-                // 修正：直接呼叫更新邏輯，而不是模擬點擊
-                const now = new Date();
-                const [minTime, maxTime] = BOSS_TIMES[bossName];
-                const minRespawn = new Date(now.getTime() + minTime * 60 * 1000);
-                const maxRespawn = new Date(now.getTime() + maxTime * 60 * 1000);
-                
                 const killBtn = existingItem.querySelector('.kill-btn');
-                const killBtnListener = new Event('click');
-                killBtn.dispatchEvent(killBtnListener);
+                killBtn.click();
                 
+                document.getElementById('boss-channel').value = '';
+                if (!lockedBoss) {
+                    bossInput.value = '';
+                    bossButtons.forEach(b => b.classList.remove('selected'));
+                    selectedBoss = null;
+                }
                 return;
             }
 
@@ -250,10 +242,12 @@
             bossList.prepend(bossItem);
             saveToLocalStorage();
 
-            bossInput.value = '';
             document.getElementById('boss-channel').value = '';
-            bossButtons.forEach(b => b.classList.remove('selected'));
-            selectedBoss = null;
+            if (!lockedBoss) {
+                bossInput.value = '';
+                bossButtons.forEach(b => b.classList.remove('selected'));
+                selectedBoss = null;
+            }
         });
 
         function saveToLocalStorage() {
@@ -261,8 +255,6 @@
             bossList.querySelectorAll('[data-boss-name]').forEach(item => {
                 const bossName = item.getAttribute('data-boss-name');
                 const channel = item.getAttribute('data-channel');
-                
-                // 取得當前的倒數計時器
                 const countdownEl = item.querySelector('.countdown');
                 const countdownText = countdownEl.textContent;
                 
@@ -316,7 +308,7 @@
                 bossList.appendChild(bossItem);
             });
         }
-
+        
         window.onload = loadFromLocalStorage;
     </script>
 </body>
