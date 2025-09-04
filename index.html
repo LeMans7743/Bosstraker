@@ -35,7 +35,7 @@ body { font-family: 'Inter', sans-serif; }
 <div class="flex space-x-2">
 <div class="flex-1">
 <label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
-<input type="text" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
+<input type="number" id="boss-channel" min="1" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
 </div>
 </div>
 <button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
@@ -48,9 +48,11 @@ const bossButtons = document.querySelectorAll('.boss-btn');
 const bossInput = document.getElementById('boss-name');
 const bossList = document.getElementById('boss-list');
 const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
-let selectedBoss = null;// 啟用通知權限 if ("Notification" in window && Notification.permission !== "granted") { Notification.requestPermission(); }
+let selectedBoss = null;// 註冊 Service Worker if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').then(() => { console.log('Service Worker registered'); }).catch(err => console.error('SW registration failed:', err)); }
 
-document.getElementById("test-notify").addEventListener("click", () => { if ("Notification" in window && Notification.permission === "granted") { new Notification("測試通知", { body: "這是一則測試通知" }); } else { alert("通知權限未開啟"); } });
+// 啟用通知權限 if ("Notification" in window && Notification.permission !== "granted") { Notification.requestPermission(); }
+
+document.getElementById("test-notify").addEventListener("click", () => { if ("Notification" in window && Notification.permission === "granted") { navigator.serviceWorker.ready.then(swReg => { swReg.showNotification("測試通知", { body: "這是一則測試通知" }); }); } else { alert("通知權限未開啟"); } });
 
 bossButtons.forEach(btn => { btn.addEventListener('click', () => { if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); bossInput.value = btn.dataset.bossName; selectedBoss = btn.dataset.bossName; }); });
 
@@ -91,7 +93,9 @@ function startCountdown() {
             clearInterval(interval);
             // 發送通知
             if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(`${bossName} 在 頻道${channel} 已重生！`);
+                navigator.serviceWorker.ready.then(swReg => {
+                    swReg.showNotification(`${bossName} 在 頻道${channel} 已重生！`);
+                });
             }
         }else{
             const minutes=Math.floor(diff/60);
@@ -122,3 +126,13 @@ document.getElementById('boss-channel').value='';
 
 </body>
 </html>
+<!-- sw.js (放在相同目錄) --><script type="text/plain" id="sw-code">
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => self.clients.claim());
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.text() : 'BOSS通知';
+  e.waitUntil(
+    self.registration.showNotification('BOSS提醒', { body: data })
+  );
+});
+</script>
