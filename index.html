@@ -1,111 +1,45 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOSS 重生追蹤器</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-4">
-  <h1 class="text-2xl font-bold mb-4">BOSS 重生追蹤器</h1>
-
-  <div class="mb-4 space-x-2">
-    <button id="btn-enable-notify" class="px-3 py-1 bg-indigo-500 text-white rounded">啟用通知</button>
-    <button id="btn-test-notify" class="px-3 py-1 bg-green-500 text-white rounded">測試通知</button>
-  </div>
-
-  <div id="boss-list" class="space-y-2"></div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
-    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging.js";
-
-    // TODO: 換成你的 firebaseConfig
-    const firebaseConfig = {
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
+<script>
+  const firebaseConfig = {
   apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
   authDomain: "bosstrackerweb.firebaseapp.com",
   projectId: "bosstrackerweb",
   storageBucket: "bosstrackerweb.firebasestorage.app",
   messagingSenderId: "620047423570",
-  appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b",
-  measurementId: "G-9Y5MM0C4Y8"
-    };
+  appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
+  };
 
-    const VAPID_KEY = "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc";
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
 
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
-
-    async function registerSW() {
-      if ("serviceWorker" in navigator) {
-        try {
-          const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-          console.log("SW 註冊成功", reg);
-        } catch (err) {
-          console.error("SW 註冊失敗", err);
-        }
-      }
-    }
-
-    async function requestAndSaveToken() {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        alert("請允許通知權限");
-        return;
-      }
-      await registerSW();
-      try {
-        const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-        console.log("FCM token:", token);
-        // TODO: 傳到你的後端 (Cloud Function / DB)
-        return token;
-      } catch (err) {
-        console.error("取得 token 失敗", err);
-      }
-    }
-  // 取得 Token (手機 B 專用)
-  getToken(messaging, { vapidKey: "你的 VAPID 公鑰" })
-    .then((currentToken) => {
-      if (currentToken) {
-        console.log("取得手機 B 的 Token:", currentToken);
-        alert("你的通知 Token:\n" + currentToken);
-      } else {
-        alert("沒有拿到 Token，可能沒開通知權限");
-      }
-    })
-    .catch((err) => {
-      console.error("無法取得 Token", err);
-    });
-    // 前景通知
-    onMessage(messaging, (payload) => {
-      console.log("前景訊息:", payload);
-      new Notification(payload.notification?.title || "通知", {
-        body: payload.notification?.body || ""
+  // 註冊 Service Worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/firebase-messaging-sw.js")
+      .then((registration) => {
+        console.log("Service Worker 已註冊", registration);
+        messaging.useServiceWorker(registration);
       });
-    });
+  }
 
-    document.getElementById("btn-enable-notify").addEventListener("click", () => requestAndSaveToken());
-
-    document.getElementById("btn-test-notify").addEventListener("click", () => {
-      if (Notification.permission === "granted") {
-        new Notification("測試通知", { body: "前景測試成功" });
-      } else {
-        alert("請先啟用通知");
+  // 申請通知權限
+  function requestPermission() {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        messaging.getToken({ vapidKey: "你的Public VAPID Key" })
+          .then((currentToken) => {
+            console.log("裝置 Token:", currentToken);
+            alert("通知已啟用！");
+          });
       }
     });
+  }
 
-    // ⚡ BOSS 倒數邏輯 → 這裡示範直接呼叫 Cloud Function
-    async function notifyBossReborn(boss, channel, token) {
-      await fetch("https://us-central1-YOUR_PROJECT.cloudfunctions.net/sendPush", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          title: `${boss} 已重生`,
-          body: `${boss} 在 ${channel} 頻道重生了！`
-        })
-      });
-    }
-  </script>
-</body>
-</html>
+  // 測試通知
+  function testNotification() {
+    new Notification("測試通知", { body: "Boss Timer 測試成功！" });
+  }
+</script>
+
+<button onclick="requestPermission()">啟用通知</button>
+<button onclick="testNotification()">測試通知</button>
