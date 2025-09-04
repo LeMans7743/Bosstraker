@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,14 +18,14 @@ body { font-family: 'Inter', sans-serif; }
 </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-4">
-<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4"><div class="w-full flex justify-between items-center">
+<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4">
+
+<div class="w-full">
 <h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
-<div class="flex gap-2">
-<button id="enable-notify" class="px-3 py-1 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600">啟用通知</button>
-<button id="test-notify" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">測試通知</button>
+<div id="boss-list" class="flex flex-col gap-1"></div>
 </div>
-</div>
-<div id="boss-list" class="flex flex-col gap-1 w-full"></div><div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
+
+<div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
 <h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
 <form id="add-boss-form" class="space-y-2">
 <div class="space-y-1">
@@ -39,37 +40,97 @@ body { font-family: 'Inter', sans-serif; }
 <div class="flex space-x-2">
 <div class="flex-1">
 <label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
-<input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm" min="1">
+<input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
 </div>
 </div>
 <button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
 </form>
-</div></div>
+</div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
+
+// --- Firebase 初始化 ---
+const firebaseConfig = {
+  apiKey: "你的API_KEY",
+  authDomain: "你的專案.firebaseapp.com",
+  projectId: "你的專案ID",
+  storageBucket: "你的專案.appspot.com",
+  messagingSenderId: "你的訊息發送ID",
+  appId: "你的AppID"
+};
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+// 註冊 Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  .then(registration => console.log('Service Worker 註冊成功', registration))
+  .catch(err => console.error('Service Worker 註冊失敗', err));
+}
+
+// 請求通知權限
+Notification.requestPermission().then(permission => {
+  if (permission === 'granted') {
+    console.log('通知權限已授予');
+    getToken(messaging, { vapidKey: 'YOUR_PUBLIC_VAPID_KEY' })
+      .then(currentToken => {
+        if (currentToken) {
+          console.log('FCM Token:', currentToken);
+          // 可將 token 存到後端或 localStorage
+        } else {
+          console.warn('無法取得 token');
+        }
+      })
+      .catch(err => console.error('取得 token 失敗', err));
+  }
+});
+
+// 前景訊息處理
+onMessage(messaging, (payload) => {
+  console.log('收到前景訊息:', payload);
+  const notification = new Notification(payload.notification.title, {
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/favicon.ico'
+  });
+});
+</script>
+
 <script>
 const bossButtons = document.querySelectorAll('.boss-btn');
 const bossInput = document.getElementById('boss-name');
 const bossList = document.getElementById('boss-list');
 const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
-let selectedBoss = null;bossButtons.forEach(btn => { btn.addEventListener('click', () => { if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); bossInput.value = btn.dataset.bossName; selectedBoss = btn.dataset.bossName; }); });
+let selectedBoss = null;
 
-// 通知相關 function showNotification(title, body){ if(Notification.permission === "granted"){ new Notification(title, { body: body }); } }
+bossButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        bossInput.value = btn.dataset.bossName;
+        selectedBoss = btn.dataset.bossName;
+    });
+});
 
-document.getElementById('enable-notify').addEventListener('click', async()=>{ let permission = await Notification.requestPermission(); alert(permission === 'granted' ? '通知已啟用' : '通知被拒絕'); });
+document.getElementById('add-boss-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const bossName = bossInput.value;
+    const channel = document.getElementById('boss-channel').value;
+    if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
 
-document.getElementById('test-notify').addEventListener('click', ()=>{ showNotification('測試通知', '這是一則測試訊息'); });
+    const spawnTime = BOSS_RESPAWN[bossName];
+    const now = new Date();
+    let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
 
-document.getElementById('add-boss-form').addEventListener('submit', e => { e.preventDefault(); const bossName = bossInput.value; const channel = document.getElementById('boss-channel').value; if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
+    const bossItem = document.createElement('div');
+    bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
+    bossItem.dataset.respawn = respawnTime.getTime();
 
-const spawnTime = BOSS_RESPAWN[bossName];
-const now = new Date();
-let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-
-const bossItem = document.createElement('div');
-bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
-bossItem.dataset.respawn = respawnTime.getTime();
-
-bossItem.innerHTML=`
-
+    bossItem.innerHTML=`
 <p class="font-bold">${bossName}</p>
 <p class="text-sm text-gray-500">頻道: ${channel}</p>
 <p class="text-sm text-gray-500">預估重生時間: <span class="respawn-time">${respawnTime.toLocaleTimeString()}</span></p>
@@ -77,21 +138,25 @@ bossItem.innerHTML=`
 <div class="flex gap-1">
 <button class="reset-btn px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">已擊殺</button>
 <button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
-</div>`;bossList.prepend(bossItem);
+</div>`;
 
-const countdownEl = bossItem.querySelector('.countdown');
-let interval;
-function startCountdown(){
-    clearInterval(interval);
-    interval = setInterval(()=>{
+    bossList.prepend(bossItem);
+
+    const countdownEl = bossItem.querySelector('.countdown');
+    let interval = setInterval(()=>{
         const now=new Date();
         let diff=(respawnTime-now)/1000;
         bossItem.classList.remove('flash-blue','flash-red');
         if(diff<=0){
             countdownEl.textContent='BOSS已重生！';
             bossItem.style.backgroundColor='#22c55e';
+
+            // 前景通知
+            if(Notification.permission === 'granted'){
+                new Notification(`${bossName} 已在頻道 ${channel} 重生！`);
+            }
+
             clearInterval(interval);
-            showNotification(`${bossName}`, `${bossName} 在 頻道${channel} 已重生！`);
         }else{
             const minutes=Math.floor(diff/60);
             const seconds=Math.floor(diff%60);
@@ -100,23 +165,19 @@ function startCountdown(){
             else if(diff<=300) bossItem.classList.add('flash-blue');
         }
     },1000);
-}
-startCountdown();
 
-bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove();clearInterval(interval);});
-bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
-    const now=new Date();
-    respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-    bossItem.dataset.respawn = respawnTime.getTime();
-    bossItem.querySelector('.respawn-time').textContent=respawnTime.toLocaleTimeString();
-    bossItem.style.backgroundColor='';
-    startCountdown();
+    bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove();});
+    bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
+        const now=new Date();
+        respawnTime = new Date(now.getTime()+spawnTime*60*1000);
+        bossItem.dataset.respawn = respawnTime.getTime();
+        bossItem.querySelector('.respawn-time').textContent=respawnTime.toLocaleTimeString();
+        bossItem.style.backgroundColor='';
+    });
+
+    bossInput.value='';
+    document.getElementById('boss-channel').value='';
 });
-
-bossInput.value='';
-document.getElementById('boss-channel').value='';
-
-}); </script>
-
+</script>
 </body>
 </html>
