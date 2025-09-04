@@ -26,7 +26,7 @@
   function requestPermission() {
     Notification.requestPermission().then((permission) => {
       if (permission === "granted") {
-        messaging.getToken({ vapidKey: "你的Public VAPID Key" })
+        messaging.getToken({ vapidKey: "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc" })
           .then((currentToken) => {
             console.log("裝置 Token:", currentToken);
             alert("通知已啟用！");
