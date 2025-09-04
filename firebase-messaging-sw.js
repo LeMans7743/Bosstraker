@@ -11,6 +11,8 @@ const firebaseConfig = {
   appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
 };
 firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // 取得 Messaging 實例
 const messaging = firebase.messaging();
