@@ -48,7 +48,7 @@ const bossList = document.getElementById('boss-list');
 const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
 let selectedBoss = null;
   // 註冊 Service Worker 
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/firebase-messaging-sw.js') .then(reg => console.log('Service Worker 已註冊', reg)) .catch(err => console.error('Service Worker 註冊失敗', err)); }
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/Bosstraker/firebase-messaging-sw.js') .then(reg => console.log('Service Worker 已註冊', reg)) .catch(err => console.error('Service Worker 註冊失敗', err)); }
 
 // 點擊 BOSS 按鈕 
   bossButtons.forEach(btn => { btn.addEventListener('click', () => { if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); bossInput.value = btn.dataset.bossName; selectedBoss = btn.dataset.bossName; }); });
