@@ -1,132 +1,191 @@
-<!DOCTYPE html><html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOSS重生時間追蹤器</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body { font-family: 'Inter', sans-serif; }
-.boss-btn.selected { background-color: #4f46e5; color: white; }
-.flash-blue { animation: flashBlue 1s infinite; }
-.flash-red { animation: flashRed 1s infinite; }
-@keyframes flashBlue { 0%,100%{background-color:#3b82f6;}50%{background-color:#60a5fa;} }
-@keyframes flashRed { 0%,100%{background-color:#ef4444;}50%{background-color:#f87171;} }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BOSS 重生追蹤器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .boss-btn.selected { background-color: #4f46e5; color: white; }
+    .flash-blue { animation: flashBlue 1s infinite; }
+    .flash-red { animation: flashRed 1s infinite; }
+    @keyframes flashBlue { 0%,100%{background-color:#3b82f6;}50%{background-color:#60a5fa;} }
+    @keyframes flashRed { 0%,100%{background-color:#ef4444;}50%{background-color:#f87171;} }
+  </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-4">
-<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4"><div class="w-full">
-<h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
-<div id="boss-list" class="flex flex-col gap-1"></div>
-</div><div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
-<h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
-<form id="add-boss-form" class="space-y-2">
-<div class="space-y-1">
-<label class="block text-sm font-medium text-gray-700">BOSS名稱</label>
-<div id="boss-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-2">
-<button type="button" data-boss-name="雪毛怪人" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">雪毛怪人</button>
-<button type="button" data-boss-name="咕咕鐘" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">咕咕鐘</button>
-<button type="button" data-boss-name="測試王" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">測試王</button>
-</div>
-<input type="hidden" id="boss-name" required>
-</div>
-<div class="flex space-x-2">
-<div class="flex-1">
-<label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
-<input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
-</div>
-</div>
-<button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
-</form>
-</div></div>
-<script>
-const bossButtons = document.querySelectorAll('.boss-btn');
-const bossInput = document.getElementById('boss-name');
-const bossList = document.getElementById('boss-list');
-const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
-let selectedBoss = null;
-  // 註冊 Service Worker 
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/Bosstraker/firebase-messaging-sw.js') .then(reg => console.log('Service Worker 已註冊', reg)) .catch(err => console.error('Service Worker 註冊失敗', err)); }
+  <div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4">
+    <!-- 追蹤列表 -->
+    <div class="w-full">
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
+      <div id="boss-list" class="flex flex-col gap-1"></div>
+    </div>
 
-// 點擊 BOSS 按鈕 
-  bossButtons.forEach(btn => { btn.addEventListener('click', () => { if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); bossInput.value = btn.dataset.bossName; selectedBoss = btn.dataset.bossName; }); });
+    <!-- 新增追蹤 -->
+    <div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
+      <form id="add-boss-form" class="space-y-2">
+        <div class="space-y-1">
+          <label class="block text-sm font-medium text-gray-700">BOSS名稱</label>
+          <div id="boss-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <button type="button" data-boss-name="雪毛怪人" class="boss-btn p-2 border rounded-md text-sm">雪毛怪人</button>
+            <button type="button" data-boss-name="咕咕鐘" class="boss-btn p-2 border rounded-md text-sm">咕咕鐘</button>
+          </div>
+          <input type="hidden" id="boss-name" required>
+        </div>
+        <div class="flex space-x-2">
+          <div class="flex-1">
+            <label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
+            <input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
+          </div>
+        </div>
+        <div class="flex justify-between">
+          <button type="submit" class="py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
+          <button type="button" id="enable-notify" class="py-1 px-4 rounded-md bg-green-600 text-white hover:bg-green-700">啟用通知</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-// 發送通知函數 
-  function sendNotification(title, body) { 
-    if ('serviceWorker' in navigator && Notification.permission === 'granted') { 
-      navigator.serviceWorker.ready.then(reg => { 
-        reg.showNotification(title, { body, icon: 'https://placehold.co/100x100/A0522D/ffffff?text=BOSS' }); }); } }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// 請求通知權限 
-  if ('Notification' in window && Notification.permission !== 'granted') { 
-    Notification.requestPermission(); }
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
+      authDomain: "bosstrackerweb.firebaseapp.com",
+      projectId: "bosstrackerweb",
+      storageBucket: "bosstrackerweb.firebasestorage.app",
+      messagingSenderId: "620047423570",
+      appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
+    };
 
-// 新增追蹤項目 
-  document.getElementById('add-boss-form').addEventListener('submit', e => { 
-    e.preventDefault(); 
-    const bossName = bossInput.value; 
-    const channel = document.getElementById('boss-channel').value; 
-    if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
+    const VAPID_KEY = "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc";
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
 
-const spawnTime = BOSS_RESPAWN[bossName];
-const now = new Date();
-let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
+    // BOSS 重生時間
+    const BOSS_RESPAWN = {
+      "雪毛怪人": { min: 45, max: 68 },
+      "咕咕鐘": { min: 68, max: 90 }
+    };
 
-const bossItem = document.createElement('div');
-bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
-bossItem.dataset.respawn = respawnTime.getTime();
+    const bossButtons = document.querySelectorAll('.boss-btn');
+    const bossInput = document.getElementById('boss-name');
+    const bossList = document.getElementById('boss-list');
+    let selectedBoss = localStorage.getItem("lockedBoss") || null;
 
-bossItem.innerHTML=`
-
-<p class="font-bold">${bossName}</p>
-<p class="text-sm text-gray-500">頻道: ${channel}</p>
-<p class="text-sm text-gray-500">預估重生時間: <span class="respawn-time">${respawnTime.toLocaleTimeString()}</span></p>
-<p class="text-sm text-gray-500">倒數計時: <span class="countdown">${spawnTime.toFixed(1)} 分鐘</span></p>
-<div class="flex gap-1">
-<button class="reset-btn px-2 py-0.5 text-xs bg-yellow-400 text-white rounded">已擊殺</button>
-<button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
-</div>`;bossList.prepend(bossItem);
-
-const countdownEl = bossItem.querySelector('.countdown');
-
-let interval = setInterval(updateCountdown, 1000);
-
-function updateCountdown(){
-    const now = new Date();
-    let diff = (respawnTime-now)/1000;
-    bossItem.classList.remove('flash-blue','flash-red');
-    if(diff<=0){
-        countdownEl.textContent='BOSS已重生！';
-        bossItem.style.backgroundColor='#22c55e';
-        sendNotification('BOSS重生', `${bossName} 在頻道 ${channel} 已重生！`);
-        clearInterval(interval);
-    } else {
-        const minutes=Math.floor(diff/60);
-        const seconds=Math.floor(diff%60);
-        countdownEl.textContent=`${minutes}分${seconds}秒`;
-        if(diff<=60) bossItem.classList.add('flash-red');
-        else if(diff<=300) bossItem.classList.add('flash-blue');
+    // 預設鎖定的 BOSS
+    if (selectedBoss) {
+      bossInput.value = selectedBoss;
+      bossButtons.forEach(btn=>{
+        if(btn.dataset.bossName === selectedBoss) btn.classList.add('selected');
+      });
     }
-}
 
-bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove();});
+    bossButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        bossButtons.forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        bossInput.value = btn.dataset.bossName;
+        selectedBoss = btn.dataset.bossName;
+        localStorage.setItem("lockedBoss", selectedBoss);
+      });
+    });
 
-bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
-    const now = new Date();
-    respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-    bossItem.dataset.respawn = respawnTime.getTime();
-    bossItem.querySelector('.respawn-time').textContent = respawnTime.toLocaleTimeString();
-    bossItem.style.backgroundColor = '';
-    clearInterval(interval);
-    interval = setInterval(updateCountdown,1000);
-});
+    // 啟用通知
+    document.getElementById("enable-notify").addEventListener("click", async ()=>{
+      try {
+        const reg = await navigator.serviceWorker.register("/Bosstraker/firebase-messaging-sw.js");
+        console.log("Service Worker registered:", reg);
+        const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+        console.log("FCM Token:", token);
+        alert("通知功能已啟用");
+      } catch(e) {
+        console.error("通知啟用失敗", e);
+      }
+    });
 
-bossInput.value='';
-document.getElementById('boss-channel').value='';
+    // 新增 BOSS
+    document.getElementById('add-boss-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const bossName = bossInput.value;
+      const channel = document.getElementById('boss-channel').value;
+      if (!bossName || !channel){ alert('請選擇BOSS並填寫頻道'); return; }
 
-}); </script>
+      const {min, max} = BOSS_RESPAWN[bossName];
+      const now = new Date();
+      let minTime = new Date(now.getTime() + min*60*1000);
+      let maxTime = new Date(now.getTime() + max*60*1000);
 
+      const bossItem = document.createElement('div');
+      bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
+      bossItem.innerHTML=`
+        <p class="font-bold">${bossName}</p>
+        <p class="text-sm text-gray-500">頻道: ${channel}</p>
+        <p class="text-sm text-gray-500">預估重生: ${min}–${max} 分鐘</p>
+        <p class="text-sm text-gray-500">倒數: <span class="countdown"></span></p>
+        <div class="flex gap-1">
+          <button class="reset-btn px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">已擊殺</button>
+          <button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
+        </div>`;
+      bossList.prepend(bossItem);
+
+      const countdownEl = bossItem.querySelector('.countdown');
+      let notifiedMin = false, notifiedMax = false;
+
+      let interval = setInterval(()=>{
+        const now = new Date();
+        let diffMin = (minTime - now)/1000;
+        let diffMax = (maxTime - now)/1000;
+
+        if (diffMax <= 0) {
+          countdownEl.textContent = "已脫離掌握";
+          clearInterval(interval);
+          return;
+        }
+
+        let minStr = diffMin>0 ? `${Math.floor(diffMin/60)}分${Math.floor(diffMin%60)}秒` : "已到";
+        let maxStr = `${Math.floor(diffMax/60)}分${Math.floor(diffMax%60)}秒`;
+        countdownEl.textContent = `最短剩餘 ${minStr} / 最長剩餘 ${maxStr}`;
+
+        // 通知
+        if (!notifiedMin && diffMin <= 0) {
+          sendNotification(`${bossName} 在頻道${channel} 即將重生`, "最短時間已到！");
+          notifiedMin = true;
+        }
+        if (!notifiedMax && diffMax <= 60) {
+          sendNotification(`${bossName} 在頻道${channel} 即將重生完畢`, "最長時間即將到！");
+          notifiedMax = true;
+        }
+      },1000);
+
+      bossItem.querySelector('.delete-btn').addEventListener('click',()=>{ bossItem.remove(); clearInterval(interval); });
+      bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
+        const now = new Date();
+        minTime = new Date(now.getTime() + min*60*1000);
+        maxTime = new Date(now.getTime() + max*60*1000);
+        notifiedMin = false; notifiedMax = false;
+      });
+
+      document.getElementById('boss-channel').value='';
+    });
+
+    // 前景通知測試
+    onMessage(messaging, (payload)=>{
+      console.log("前景訊息", payload);
+      alert(`BOSS通知: ${payload.notification.title}\n${payload.notification.body}`);
+    });
+
+    function sendNotification(title, body){
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg=>{
+          reg.showNotification(title, { body, icon:"https://placehold.co/100x100/22c55e/fff?text=BOSS" });
+        });
+      }
+    }
+  </script>
 </body>
 </html>
