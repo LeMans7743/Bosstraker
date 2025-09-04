@@ -1,107 +1,98 @@
-<!-- index.html（範例） -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BOSS Tracker (FCM 範例)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOSS 重生追蹤器</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>BOSS Tracker + FCM 範例</h1>
-  <button id="btn-enable-notify">啟用通知</button>
-  <button id="btn-test-notify">測試通知 (前景)</button>
+<body class="bg-gray-100 p-4">
+  <h1 class="text-2xl font-bold mb-4">BOSS 重生追蹤器</h1>
 
-  <!-- ... 你的 BOSS UI 位置 ... -->
+  <div class="mb-4 space-x-2">
+    <button id="btn-enable-notify" class="px-3 py-1 bg-indigo-500 text-white rounded">啟用通知</button>
+    <button id="btn-test-notify" class="px-3 py-1 bg-green-500 text-white rounded">測試通知</button>
+  </div>
+
+  <div id="boss-list" class="space-y-2"></div>
+
   <script type="module">
-    // 1) 引入 Firebase Web v11 modular (或你現有的版本)
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-    // ← 把下面換成你在 Firebase Console 看到的 config
+    // TODO: 換成你的 firebaseConfig
     const firebaseConfig = {
-  apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
-  authDomain: "bosstrackerweb.firebaseapp.com",
-  projectId: "bosstrackerweb",
-  storageBucket: "bosstrackerweb.firebasestorage.app",
-  messagingSenderId: "620047423570",
-  appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    // VAPID 公鑰（Cloud Messaging → Web 配置中拿到的 public key）
-    const VAPID_KEY = 'BBWLdDDevIZm6i6lCtkpELezMRdHSNtyXjvmQD2C_JtHBcwJPtJheW59us79HleJW2qGSB2aEWmqVW_PdUuq0Og';
+    const VAPID_KEY = "YOUR_PUBLIC_VAPID_KEY";
 
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
-    // 註冊 Service Worker（必須位於網站根目錄）
     async function registerSW() {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         try {
-          const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          console.log('SW registered', reg);
-          return reg;
-        } catch (e) {
-          console.error('SW 註冊失敗', e);
+          const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+          console.log("SW 註冊成功", reg);
+        } catch (err) {
+          console.error("SW 註冊失敗", err);
         }
       }
     }
 
-    // 取得 FCM Token (要在使用者同意通知後呼叫)
     async function requestAndSaveToken() {
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        alert('請允許通知權限');
-        return null;
+      if (permission !== "granted") {
+        alert("請允許通知權限");
+        return;
       }
       await registerSW();
       try {
-        const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
-        console.log('FCM token:', currentToken);
-        // TODO: 把 currentToken 傳給你的後端，儲存起來（例如 POST /save-token）
-        // fetch('/save-token', {method:'POST', body: JSON.stringify({token: currentToken})})
-        return currentToken;
+        const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+        console.log("FCM token:", token);
+        // TODO: 傳到你的後端 (Cloud Function / DB)
+        return token;
       } catch (err) {
-        console.error('取得 token 失敗', err);
-        return null;
+        console.error("取得 token 失敗", err);
       }
     }
 
-    // 前景訊息處理（頁面在前景時）
+    // 前景通知
     onMessage(messaging, (payload) => {
-      console.log('前景收到訊息', payload);
-      // 你可以在這裡顯示 UI 或用 Notification 顯示
-      if (Notification.permission === 'granted') {
-        new Notification(payload.notification?.title || '通知', { body: payload.notification?.body || '' });
-      }
+      console.log("前景訊息:", payload);
+      new Notification(payload.notification?.title || "通知", {
+        body: payload.notification?.body || ""
+      });
     });
 
-    // 範例 UI 鈕
-    document.getElementById('btn-enable-notify').addEventListener('click', () => requestAndSaveToken());
-    document.getElementById('btn-test-notify').addEventListener('click', async () => {
-      // 這裡只是前景測試（不走 FCM Push），方便測試
-      if (Notification.permission === 'granted') {
-        new Notification('測試通知', { body: '前景測試 - 你應該能在手機看到這個通知' });
+    document.getElementById("btn-enable-notify").addEventListener("click", () => requestAndSaveToken());
+
+    document.getElementById("btn-test-notify").addEventListener("click", () => {
+      if (Notification.permission === "granted") {
+        new Notification("測試通知", { body: "前景測試成功" });
       } else {
-        alert('請先按「啟用通知」取得權限');
+        alert("請先啟用通知");
       }
     });
 
-    // 當 BOSS 倒數到 0 時：呼叫你的後端 API 通知（範例使用 fetch 到 Cloud Function endpoint）
-    async function notifyBossReborn(bossName, channel, targetToken) {
-      // 建議：後端檢查請求安全性（不要讓前端直接呼叫 admin SDK），此處示範向 Cloud Function 發送請求：
-      await fetch('https://us-central1-YOUR_PROJECT.cloudfunctions.net/sendPush', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    // ⚡ BOSS 倒數邏輯 → 這裡示範直接呼叫 Cloud Function
+    async function notifyBossReborn(boss, channel, token) {
+      await fetch("https://us-central1-YOUR_PROJECT.cloudfunctions.net/sendPush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: targetToken, // 或讓後端查到所有 token 再發送
-          title: `${bossName} 已重生！`,
-          body: `${bossName} 在 頻道 ${channel} 已重生！`,
-          data: { boss: bossName, channel: String(channel) }
+          token,
+          title: `${boss} 已重生`,
+          body: `${boss} 在 ${channel} 頻道重生了！`
         })
       });
     }
-
-    // → 你在倒數邏輯到 0 時呼叫 notifyBossReborn()
   </script>
 </body>
 </html>
