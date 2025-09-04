@@ -1,6 +1,5 @@
-// 必須在 GitHub Pages 根目錄
-importScripts("https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+importScripts("https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js");
 
 const firebaseConfig = {
   apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
@@ -12,14 +11,14 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const messaging = firebase.messaging();
 
-// 背景推播通知處理
-messaging.onBackgroundMessage((payload) => {
-  console.log("收到背景訊息: ", payload);
-  self.registration.showNotification(payload.notification.title, {
+messaging.onBackgroundMessage((payload)=>{
+  console.log('[firebase-messaging-sw.js] 背景訊息 ', payload);
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
     body: payload.notification.body,
-    icon: "/icon.png" // 你可以自訂一張小圖
-  });
+    icon: "https://placehold.co/100x100/ef4444/fff?text=BOSS"
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
