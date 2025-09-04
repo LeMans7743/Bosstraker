@@ -15,7 +15,7 @@
 
   // 註冊 Service Worker
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/Nosstraker/firebase-messaging-sw.js")
+    navigator.serviceWorker.register("/Bosstraker/firebase-messaging-sw.js")
       .then((registration) => {
         console.log("Service Worker 已註冊", registration);
         messaging.useServiceWorker(registration);
