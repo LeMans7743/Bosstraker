@@ -120,32 +120,3 @@ document.getElementById('boss-channel').value='';
 
 </body>
 </html>
-startCountdown();
-
-bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove(); clearInterval(interval);});
-bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
-    const now=new Date();
-    respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-    bossItem.dataset.respawn = respawnTime.getTime();
-    respawnEl.textContent=respawnTime.toLocaleTimeString();
-    bossItem.style.backgroundColor='';
-    startCountdown();
-});
-
-bossInput.value='';
-document.getElementById('boss-channel').value='';
-
-}); </script>
-
-</body>
-</html>
-<!-- sw.js (放在相同目錄) --><script type="text/plain" id="sw-code">
-self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => self.clients.claim());
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.text() : 'BOSS通知';
-  e.waitUntil(
-    self.registration.showNotification('BOSS提醒', { body: data })
-  );
-});
-</script>
