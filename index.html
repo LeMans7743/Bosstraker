@@ -70,7 +70,7 @@ const messaging = firebase.messaging();
 const BOSS_RESPAWN = {
   '雪毛怪人': { min: 45, max: 68 },
   '咕咕鐘': { min: 68, max: 90 },
-  '測試王': { min: 1, max: 2 }
+  '測試王': { min: 5/60, max: 10/60 }
 };
 
 let selectedBoss = localStorage.getItem('lockedBoss') || null;
@@ -148,20 +148,28 @@ document.getElementById('add-boss-form').addEventListener('submit',e=>{
       notifiedMax=true;
     }
 
-    if(diffMax<=0){
+if(diffMax <= 0){
       clearInterval(interval);
-      statusEl.textContent='狀態: 已脫離掌握';
-      minEl.textContent='-';
-      maxEl.textContent='-';
-    }else{
-      if(diffMin>0){
-        const m=Math.floor(diffMin/60),s=Math.floor(diffMin%60);
-        minEl.textContent=`${m}分${s}秒`;
-      }else{
-        minEl.textContent='已過';
+      statusEl.textContent = '狀態: 已脫離掌握';
+      statusEl.classList.remove('text-green-600');
+      statusEl.classList.add('text-red-600');
+      minEl.textContent = '-';
+      maxEl.textContent = '-';
+    } else {
+      if(diffMin > 0){
+        const m = Math.floor(diffMin/60), s = Math.floor(diffMin%60);
+        minEl.textContent = `${m}分${s}秒`;
+        statusEl.classList.remove('text-green-600','text-red-600');
+      } else {
+        // 進入重生範圍 → 綠色
+        minEl.textContent = '已過';
+        statusEl.textContent = '狀態: 重生中';
+        statusEl.classList.add('text-green-600');
+        statusEl.classList.remove('text-red-600');
       }
-      const m2=Math.floor(diffMax/60),s2=Math.floor(diffMax%60);
-      maxEl.textContent=`${m2}分${s2}秒`;
+      const m2 = Math.floor(diffMax/60), s2 = Math.floor(diffMax%60);
+      maxEl.textContent = `${m2}分${s2}秒`;
+}
     }
   },1000);
 
