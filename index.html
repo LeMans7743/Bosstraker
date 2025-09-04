@@ -1,183 +1,107 @@
-<!DOCTYPE html>
+<!-- index.html（範例） -->
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOSS重生時間追蹤器</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body { font-family: 'Inter', sans-serif; }
-.boss-btn.selected { background-color: #4f46e5; color: white; }
-.flash-blue { animation: flashBlue 1s infinite; }
-.flash-red { animation: flashRed 1s infinite; }
-@keyframes flashBlue { 0%,100%{background-color:#3b82f6;}50%{background-color:#60a5fa;} }
-@keyframes flashRed { 0%,100%{background-color:#ef4444;}50%{background-color:#f87171;} }
-</style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BOSS Tracker (FCM 範例)</title>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-4">
-<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4">
+<body>
+  <h1>BOSS Tracker + FCM 範例</h1>
+  <button id="btn-enable-notify">啟用通知</button>
+  <button id="btn-test-notify">測試通知 (前景)</button>
 
-<div class="w-full">
-<h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
-<div id="boss-list" class="flex flex-col gap-1"></div>
-</div>
+  <!-- ... 你的 BOSS UI 位置 ... -->
+  <script type="module">
+    // 1) 引入 Firebase Web v11 modular (或你現有的版本)
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
 
-<div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
-<h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
-<form id="add-boss-form" class="space-y-2">
-<div class="space-y-1">
-<label class="block text-sm font-medium text-gray-700">BOSS名稱</label>
-<div id="boss-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-2">
-<button type="button" data-boss-name="雪毛怪人" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">雪毛怪人</button>
-<button type="button" data-boss-name="咕咕鐘" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">咕咕鐘</button>
-<button type="button" data-boss-name="測試王" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">測試王</button>
-</div>
-<input type="hidden" id="boss-name" required>
-</div>
-<div class="flex space-x-2">
-<div class="flex-1">
-<label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
-<input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
-</div>
-</div>
-<button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增項目</button>
-</form>
-</div>
-
-</div>
-
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
-
-// --- Firebase 初始化 ---
-const firebaseConfig = {
+    // ← 把下面換成你在 Firebase Console 看到的 config
+    const firebaseConfig = {
   apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
   authDomain: "bosstrackerweb.firebaseapp.com",
   projectId: "bosstrackerweb",
   storageBucket: "bosstrackerweb.firebasestorage.app",
   messagingSenderId: "620047423570",
   appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
-};
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+    };
 
-// 註冊 Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-  .then(registration => console.log('Service Worker 註冊成功', registration))
-  .catch(err => console.error('Service Worker 註冊失敗', err));
-}
+    // VAPID 公鑰（Cloud Messaging → Web 配置中拿到的 public key）
+    const VAPID_KEY = 'BBWLdDDevIZm6i6lCtkpELezMRdHSNtyXjvmQD2C_JtHBcwJPtJheW59us79HleJW2qGSB2aEWmqVW_PdUuq0Og';
 
-// 請求通知權限
-Notification.requestPermission().then(permission => {
-  if (permission === 'granted') {
-    console.log('通知權限已授予');
-    getToken(messaging, { vapidKey: 'YOUR_PUBLIC_VAPID_KEY' })
-      .then(currentToken => {
-        if (currentToken) {
-          console.log('FCM Token:', currentToken);
-          // 可將 token 存到後端或 localStorage
-        } else {
-          console.warn('無法取得 token');
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    // 註冊 Service Worker（必須位於網站根目錄）
+    async function registerSW() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('SW registered', reg);
+          return reg;
+        } catch (e) {
+          console.error('SW 註冊失敗', e);
         }
-      })
-      .catch(err => console.error('取得 token 失敗', err));
-  }
-});
+      }
+    }
 
-// 前景訊息處理
-onMessage(messaging, (payload) => {
-  console.log('收到前景訊息:', payload);
-  const notification = new Notification(payload.notification.title, {
-    body: payload.notification.body,
-    icon: payload.notification.icon || '/favicon.ico'
-  });
-});
-</script>
+    // 取得 FCM Token (要在使用者同意通知後呼叫)
+    async function requestAndSaveToken() {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        alert('請允許通知權限');
+        return null;
+      }
+      await registerSW();
+      try {
+        const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+        console.log('FCM token:', currentToken);
+        // TODO: 把 currentToken 傳給你的後端，儲存起來（例如 POST /save-token）
+        // fetch('/save-token', {method:'POST', body: JSON.stringify({token: currentToken})})
+        return currentToken;
+      } catch (err) {
+        console.error('取得 token 失敗', err);
+        return null;
+      }
+    }
 
-<script>
-const bossButtons = document.querySelectorAll('.boss-btn');
-const bossInput = document.getElementById('boss-name');
-const bossList = document.getElementById('boss-list');
-const BOSS_RESPAWN = { '雪毛怪人': 45, '咕咕鐘': 60, '測試王': 0.1 };
-let selectedBoss = null;
-
-bossButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        if(selectedBoss) bossButtons.forEach(b=>b.classList.remove('selected'));
-        btn.classList.add('selected');
-        bossInput.value = btn.dataset.bossName;
-        selectedBoss = btn.dataset.bossName;
-    });
-});
-
-document.getElementById('add-boss-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const bossName = bossInput.value;
-    const channel = document.getElementById('boss-channel').value;
-    if(!bossName || !channel){alert('請選擇BOSS並填寫頻道');return;}
-
-    const spawnTime = BOSS_RESPAWN[bossName];
-    const now = new Date();
-    let respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-
-    const bossItem = document.createElement('div');
-    bossItem.className='bg-gray-50 rounded-xl shadow-lg p-2 flex justify-between items-center';
-    bossItem.dataset.respawn = respawnTime.getTime();
-
-    bossItem.innerHTML=`
-<p class="font-bold">${bossName}</p>
-<p class="text-sm text-gray-500">頻道: ${channel}</p>
-<p class="text-sm text-gray-500">預估重生時間: <span class="respawn-time">${respawnTime.toLocaleTimeString()}</span></p>
-<p class="text-sm text-gray-500">倒數計時: <span class="countdown">${spawnTime.toFixed(1)} 分鐘</span></p>
-<div class="flex gap-1">
-<button class="reset-btn px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">已擊殺</button>
-<button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
-</div>`;
-
-    bossList.prepend(bossItem);
-
-    const countdownEl = bossItem.querySelector('.countdown');
-    let interval = setInterval(()=>{
-        const now=new Date();
-        let diff=(respawnTime-now)/1000;
-        bossItem.classList.remove('flash-blue','flash-red');
-        if(diff<=0){
-            countdownEl.textContent='BOSS已重生！';
-            bossItem.style.backgroundColor='#22c55e';
-
-            // 前景通知
-            if(Notification.permission === 'granted'){
-                new Notification(`${bossName} 已在頻道 ${channel} 重生！`);
-            }
-
-            clearInterval(interval);
-        }else{
-            const minutes=Math.floor(diff/60);
-            const seconds=Math.floor(diff%60);
-            countdownEl.textContent=`${minutes}分${seconds}秒`;
-            if(diff<=60) bossItem.classList.add('flash-red');
-            else if(diff<=300) bossItem.classList.add('flash-blue');
-        }
-    },1000);
-
-    bossItem.querySelector('.delete-btn').addEventListener('click',()=>{bossItem.remove();});
-    bossItem.querySelector('.reset-btn').addEventListener('click',()=>{
-        const now=new Date();
-        respawnTime = new Date(now.getTime()+spawnTime*60*1000);
-        bossItem.dataset.respawn = respawnTime.getTime();
-        bossItem.querySelector('.respawn-time').textContent=respawnTime.toLocaleTimeString();
-        bossItem.style.backgroundColor='';
+    // 前景訊息處理（頁面在前景時）
+    onMessage(messaging, (payload) => {
+      console.log('前景收到訊息', payload);
+      // 你可以在這裡顯示 UI 或用 Notification 顯示
+      if (Notification.permission === 'granted') {
+        new Notification(payload.notification?.title || '通知', { body: payload.notification?.body || '' });
+      }
     });
 
-    bossInput.value='';
-    document.getElementById('boss-channel').value='';
-});
-</script>
+    // 範例 UI 鈕
+    document.getElementById('btn-enable-notify').addEventListener('click', () => requestAndSaveToken());
+    document.getElementById('btn-test-notify').addEventListener('click', async () => {
+      // 這裡只是前景測試（不走 FCM Push），方便測試
+      if (Notification.permission === 'granted') {
+        new Notification('測試通知', { body: '前景測試 - 你應該能在手機看到這個通知' });
+      } else {
+        alert('請先按「啟用通知」取得權限');
+      }
+    });
+
+    // 當 BOSS 倒數到 0 時：呼叫你的後端 API 通知（範例使用 fetch 到 Cloud Function endpoint）
+    async function notifyBossReborn(bossName, channel, targetToken) {
+      // 建議：後端檢查請求安全性（不要讓前端直接呼叫 admin SDK），此處示範向 Cloud Function 發送請求：
+      await fetch('https://us-central1-YOUR_PROJECT.cloudfunctions.net/sendPush', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: targetToken, // 或讓後端查到所有 token 再發送
+          title: `${bossName} 已重生！`,
+          body: `${bossName} 在 頻道 ${channel} 已重生！`,
+          data: { boss: bossName, channel: String(channel) }
+        })
+      });
+    }
+
+    // → 你在倒數邏輯到 0 時呼叫 notifyBossReborn()
+  </script>
 </body>
 </html>
