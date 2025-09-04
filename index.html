@@ -69,7 +69,6 @@
         // VAPID 金鑰
         const vapidKey = "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc";
 
-        // 請求通知權限並取得 FCM Token
         async function requestPermission() {
             try {
                 const permission = await Notification.requestPermission();
@@ -90,7 +89,8 @@
         const bossList = document.getElementById('boss-list');
         const lockBtn = document.getElementById('lock-btn');
         const unlockBtn = document.getElementById('unlock-btn');
-        const BOSS_TIMES = { '雪毛怪人': [45, 68], '咕咕鐘': [68, 90], '測試王': [0.0833, 0.1667] };
+        // 修正測試王的時間為 5-10 秒
+        const BOSS_TIMES = { '雪毛怪人': [45, 68], '咕咕鐘': [68, 90], '測試王': [5 / 60, 10 / 60] };
         let selectedBoss = null;
         let lockedBoss = null;
 
@@ -101,7 +101,7 @@
             }
             lockedBoss = selectedBoss;
             bossButtons.forEach(b => {
-                if (b.dataset.boss-name !== lockedBoss) {
+                if (b.dataset.bossName !== lockedBoss) {
                     b.disabled = true;
                     b.classList.remove('selected');
                 }
@@ -124,8 +124,8 @@
                 if (!lockedBoss) {
                     bossButtons.forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
-                    bossInput.value = btn.dataset.boss-name;
-                    selectedBoss = btn.dataset.boss-name;
+                    bossInput.value = btn.dataset.bossName;
+                    selectedBoss = btn.dataset.bossName;
                 }
             });
         });
@@ -202,6 +202,7 @@
                 notificationSent = false;
                 clearInterval(interval);
                 interval = setInterval(updateCountdown, 1000);
+                updateCountdown();
                 saveToLocalStorage();
             });
 
@@ -212,15 +213,31 @@
             e.preventDefault();
             const bossName = bossInput.value;
             const channel = document.getElementById('boss-channel').value;
-            if (!bossName || !channel) {
-                alert('請選擇 BOSS 並填寫頻道');
+
+            // 修正：檢查 bossName 是否已選
+            if (!bossName) {
+                alert('請先選擇一個 BOSS！');
+                return;
+            }
+            if (!channel) {
+                alert('請填寫頻道號碼！');
                 return;
             }
 
+            // 修正：檢查是否已存在相同頻道
             let existingItem = document.querySelector(`[data-boss-name="${bossName}"][data-channel="${channel}"]`);
             if (existingItem) {
-                alert('該 BOSS 頻道已存在，將更新時間。');
-                existingItem.querySelector('.kill-btn').click();
+                alert('該 BOSS 頻道已存在，將更新重生時間。');
+                // 修正：直接呼叫更新邏輯，而不是模擬點擊
+                const now = new Date();
+                const [minTime, maxTime] = BOSS_TIMES[bossName];
+                const minRespawn = new Date(now.getTime() + minTime * 60 * 1000);
+                const maxRespawn = new Date(now.getTime() + maxTime * 60 * 1000);
+                
+                const killBtn = existingItem.querySelector('.kill-btn');
+                const killBtnListener = new Event('click');
+                killBtn.dispatchEvent(killBtnListener);
+                
                 return;
             }
 
@@ -244,22 +261,37 @@
             bossList.querySelectorAll('[data-boss-name]').forEach(item => {
                 const bossName = item.getAttribute('data-boss-name');
                 const channel = item.getAttribute('data-channel');
-                const countdownText = item.querySelector('.countdown').textContent;
-
+                
+                // 取得當前的倒數計時器
+                const countdownEl = item.querySelector('.countdown');
+                const countdownText = countdownEl.textContent;
+                
                 let minRespawn = new Date();
                 let maxRespawn = new Date();
                 
                 const [minTime, maxTime] = BOSS_TIMES[bossName];
 
-                if (countdownText.includes('分')) {
-                    const [min, sec] = countdownText.match(/(\d+)分(\d+)秒/).slice(1, 3).map(Number);
-                    minRespawn = new Date(Date.now() + (min * 60 + sec) * 1000);
+                if (countdownText.includes('分') || countdownText.includes('秒')) {
+                    const now = new Date();
+                    let totalSeconds = 0;
+                    if (countdownText.includes('分')) {
+                        const parts = countdownText.match(/(\d+)分(\d+)秒/);
+                        const min = parseInt(parts[1]);
+                        const sec = parseInt(parts[2]);
+                        totalSeconds = min * 60 + sec;
+                    } else if (countdownText.includes('秒')) {
+                        const parts = countdownText.match(/(\d+)秒/);
+                        const sec = parseInt(parts[1]);
+                        totalSeconds = sec;
+                    } else if (countdownText.includes('重生中')) {
+                        const parts = countdownText.match(/(\d+)分(\d+)秒/);
+                        const min = parseInt(parts[1]);
+                        const sec = parseInt(parts[2]);
+                        totalSeconds = min * 60 + sec;
+                    }
+                    
+                    minRespawn = new Date(now.getTime() + totalSeconds * 1000);
                     maxRespawn = new Date(minRespawn.getTime() + (maxTime - minTime) * 60 * 1000);
-                } else if (countdownText.includes('重生中')) {
-                     const [min, sec] = countdownText.match(/(\d+)分(\d+)秒/).slice(1, 3).map(Number);
-                     const now = new Date();
-                     minRespawn = new Date(now.getTime() + min * 60 * 1000 + sec * 1000);
-                     maxRespawn = new Date(minRespawn.getTime() + (maxTime - minTime) * 60 * 1000);
                 }
 
                 items.push({
