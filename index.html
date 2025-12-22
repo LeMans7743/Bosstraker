@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; padding-bottom: 80px; /* 為了避開底部固定按鈕 */ }
         .hidden { display: none; }
         .option-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .option-card:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
@@ -16,6 +16,13 @@
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* 手機優化按鈕 */
+        .mobile-sticky-btn {
+            position: fixed; bottom: 0; left: 0; width: 100%; padding: 1rem;
+            background: white; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            display: none; /* 預設隱藏，JS控制顯示 */
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -53,12 +60,18 @@
                 <p class="text-gray-500 animate-pulse">正在從題庫讀取資料中...</p>
             </div>
 
-            <div class="flex gap-4 flex-col sm:flex-row" id="action-buttons">
-                <button onclick="prepareExam('exam')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="action-buttons">
+                <button onclick="prepareExam('exam')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
                     進入考卷模式 (計分)
                 </button>
-                <button onclick="prepareExam('practice')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
+                <button onclick="prepareExam('practice')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
                     進入練習模式 (即時)
+                </button>
+                <button onclick="startRetryMode()" class="sm:col-span-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1 flex justify-center items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    複習此科目的錯題
                 </button>
             </div>
             
@@ -77,16 +90,16 @@
             </div>
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
             <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-50">
-                <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg">交卷並計算分數</button>
+                <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">交卷並計算分數</button>
             </div>
         </div>
 
         <div id="practice-mode-view" class="hidden max-w-2xl mx-auto mt-4">
             <div class="flex justify-between items-end mb-4 px-2">
                 <span id="practice-progress" class="text-gray-500 font-medium"></span>
-                <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">練習模式</span>
+                <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold" id="mode-badge">練習模式</span>
             </div>
-            <div class="bg-white p-8 rounded-2xl shadow-xl min-h-[400px] flex flex-col relative">
+            <div class="bg-white p-8 rounded-2xl shadow-xl min-h-[400px] flex flex-col relative mb-20">
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold mb-8 text-gray-800 leading-relaxed" id="practice-q-text">Loading...</h3>
                     <div id="practice-options" class="space-y-4"></div>
@@ -94,15 +107,17 @@
                 
                 <div id="practice-feedback" class="hidden mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 animate-pulse-once"></div>
             </div>
-            <div class="mt-6 text-right">
-                <p class="text-xs text-gray-400 mb-2 mr-2">點擊任意處進入下一題</p>
-                <button id="btn-practice-next" onclick="nextPracticeQuestion()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition">下一題 &rarr;</button>
+            
+            <div id="btn-practice-next-container" class="mobile-sticky-btn">
+                <button id="btn-practice-next" onclick="nextPracticeQuestion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg transition flex justify-center items-center">
+                    下一題 &rarr;
+                </button>
             </div>
         </div>
 
     </main>
 
-    <footer class="text-center text-gray-400 py-8 text-xs">
+    <footer class="text-center text-gray-400 py-8 text-xs pb-24">
         <p id="secret-trigger" class="cursor-default select-none inline-block px-4 py-2 hover:text-gray-300 transition">
             © 2025 Online Exam System. All rights reserved.
         </p>
@@ -117,7 +132,12 @@
             <div class="overflow-auto flex-grow">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-100 text-gray-600 sticky top-0">
-                        <tr><th class="p-4">時間</th><th class="p-4">IP (模擬)</th><th class="p-4">科目</th><th class="p-4">分數</th></tr>
+                        <tr>
+                            <th class="p-4">時間</th>
+                            <th class="p-4">科目</th>
+                            <th class="p-4">模式</th>
+                            <th class="p-4">結果</th>
+                        </tr>
                     </thead>
                     <tbody id="admin-log-body" class="divide-y"></tbody>
                 </table>
@@ -132,14 +152,14 @@
         // --- 全域變數 ---
         let currentQuestions = [];
         let currentSubjectName = "";
+        let currentSubjectCode = "";
         let currentMode = "";
-        let scorePerQ = 0;
         let currentQIndex = 0;
         let timerInterval;
-        let practiceClickHandler = null; // 新增：用於控制練習模式的點擊監聽
+        let practiceCorrectCount = 0; // 練習模式答對題數
+        let isRetryMode = false; // 是否為重考錯題模式
 
-        // --- 核心功能 1: 讀取題庫 (AJAX) ---
-        // (此區塊完全未更動，保持原樣)
+        // --- 核心功能 1: 讀取題庫 (保持原樣，僅增加變數設定) ---
         async function prepareExam(mode) {
             const subjectCode = document.getElementById('subject-select').value;
             const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
@@ -164,12 +184,12 @@
                 }
 
                 // 隨機選題
-                // 如果要求的題數大於總題數，就取所有題目
                 const actualCount = Math.min(qCount, allQuestions.length);
                 currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, actualCount);
                 
                 currentSubjectName = subjectText;
-                scorePerQ = (100 / currentQuestions.length).toFixed(1);
+                currentSubjectCode = subjectCode;
+                isRetryMode = false;
 
                 // 開始測驗
                 document.getElementById('setup-view').classList.add('hidden');
@@ -186,6 +206,29 @@
                 document.getElementById('action-buttons').classList.remove('hidden');
                 document.getElementById('loading-spinner').classList.add('hidden');
             }
+        }
+
+        // --- 新增功能: 讀取錯題模式 ---
+        function startRetryMode() {
+            const subjectCode = document.getElementById('subject-select').value;
+            const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
+            
+            // 讀取 LocalStorage 中的錯題
+            const wrongDB = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
+            const wrongList = wrongDB[subjectCode] || [];
+
+            if (wrongList.length === 0) {
+                Swal.fire('太棒了', '此科目目前沒有紀錄錯誤題目！', 'info');
+                return;
+            }
+
+            currentQuestions = wrongList.sort(() => 0.5 - Math.random()); // 隨機排序
+            currentSubjectName = subjectText;
+            currentSubjectCode = subjectCode;
+            isRetryMode = true;
+
+            document.getElementById('setup-view').classList.add('hidden');
+            startPracticeMode(); // 重考錯題強制使用練習模式
         }
 
         // --- 核心功能 2: 考卷模式 ---
@@ -228,34 +271,47 @@
         function submitExam() {
             clearInterval(timerInterval);
             let correct = 0;
+            let wrongCount = 0;
+            
+            // 批改並記錄錯題
             currentQuestions.forEach((q, idx) => {
                 const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
-                if(ans === q.ans) correct++;
+                if(ans === q.ans) {
+                    correct++;
+                } else {
+                    wrongCount++;
+                    saveWrongQuestion(currentSubjectCode, q); // 記錄錯題
+                }
             });
             
             let score = Math.round(correct * (100 / currentQuestions.length));
             if(correct === currentQuestions.length) score = 100;
 
-            saveLog(score);
+            saveLog('考卷模式', `${score}分`);
             
-            // --- 修改處：結果顯示方式 ---
             Swal.fire({ 
                 title: '測驗結果', 
                 html: `
                     <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
-                    <div class="mt-4 text-lg text-gray-700">共測驗 <b class="text-black text-xl">${currentQuestions.length}</b> 題</div>
-                    <div class="text-lg text-gray-700">答對 <b class="text-green-600 text-xl">${correct}</b> 題</div>
+                    <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
+                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm">已將 ${wrongCount} 題錯題加入複習庫</div>` : ''}
                 `, 
                 icon: score >= 60 ? 'success' : 'warning',
                 confirmButtonText: '確定'
             }).then(() => location.reload());
         }
 
-        // --- 核心功能 3: 練習模式 ---
+        // --- 核心功能 3: 練習模式 (含重考功能) ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
+            document.getElementById('mode-badge').innerText = isRetryMode ? "錯題複習" : "練習模式";
+            document.getElementById('mode-badge').className = isRetryMode ? 
+                "bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-bold" : 
+                "bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold";
+            
             currentQIndex = 0;
+            practiceCorrectCount = 0;
             renderPracticeQ();
         }
 
@@ -267,68 +323,55 @@
             const optsDiv = document.getElementById('practice-options');
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
-            document.getElementById('btn-practice-next').classList.add('hidden');
+            document.getElementById('btn-practice-next-container').style.display = 'none'; // 隱藏底部按鈕
 
             q.options.forEach((opt, i) => {
                 const val = ["A","B","C","D"][i];
                 const btn = document.createElement('div');
                 btn.className = "option-card bg-gray-50 p-4 rounded-xl flex items-center text-gray-700 font-medium";
-                btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm">${val}</span>${opt}`;
-                btn.onclick = (e) => {
-                    // 阻止事件冒泡，避免點擊選項時直接觸發 "點擊空白處下一題"
-                    e.stopPropagation();
-                    checkPractice(btn, val, q.ans);
-                };
+                btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm flex-shrink-0">${val}</span>${opt}`;
+                btn.onclick = () => checkPractice(btn, val, q.ans, q);
                 optsDiv.appendChild(btn);
             });
         }
 
-        function checkPractice(el, userAns, correctAns) {
+        function checkPractice(el, userAns, correctAns, questionObj) {
             // 鎖定所有選項
             document.querySelectorAll('.option-card').forEach(d => d.onclick = null);
             
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
-            document.getElementById('btn-practice-next').classList.remove('hidden');
+            document.getElementById('btn-practice-next-container').style.display = 'block'; // 顯示底部按鈕
 
             if(userAns === correctAns) {
+                practiceCorrectCount++;
                 el.classList.add('correct');
                 feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>回答正確！</div>`;
+                
+                // 如果是錯題複習模式且答對了，將其從錯題庫移除
+                if(isRetryMode) {
+                    removeWrongQuestion(currentSubjectCode, questionObj);
+                }
             } else {
                 el.classList.add('wrong');
                 feedback.innerHTML = `
                     <div class="text-red-600 font-bold mb-1 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>回答錯誤</div>
                     <div class="text-gray-600 pl-8">正確答案是：<b class="text-green-600 text-lg">${correctAns}</b></div>
                 `;
+                // 標示正確選項
                 const correctIdx = ["A","B","C","D"].indexOf(correctAns);
                 if (correctIdx !== -1) {
                     document.getElementById('practice-options').children[correctIdx].classList.add('correct');
                 }
+                
+                // 答錯加入錯題庫
+                saveWrongQuestion(currentSubjectCode, questionObj);
             }
-
-            // --- 修改處：啟用「點擊任意處下一題」 ---
-            // 延遲一點時間，避免使用者點擊選項的當下就觸發下一題
-            setTimeout(() => {
-                if (currentMode === 'practice') {
-                    // 定義點擊處理函式
-                    practiceClickHandler = function() {
-                        nextPracticeQuestion();
-                    };
-                    // 綁定到整個 document
-                    document.addEventListener('click', practiceClickHandler);
-                }
-            }, 100);
         }
 
         function nextPracticeQuestion() {
-            // --- 修改處：移除點擊監聽器 ---
-            if (practiceClickHandler) {
-                document.removeEventListener('click', practiceClickHandler);
-                practiceClickHandler = null;
-            }
-
             if(++currentQIndex < currentQuestions.length) {
-                // 簡易轉場動畫
+                // 轉場
                 const card = document.querySelector('#practice-mode-view > .bg-white');
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(10px)';
@@ -339,23 +382,57 @@
                     card.style.transform = 'translateY(0)';
                 }, 200);
             } else {
-                Swal.fire('練習結束', '您已完成本次所有題目！', 'success').then(() => location.reload());
+                // 練習結束，顯示統計
+                saveLog(isRetryMode ? '錯題複習' : '練習模式', `${practiceCorrectCount}/${currentQuestions.length} 題`);
+                
+                Swal.fire({
+                    title: isRetryMode ? '複習結束' : '練習結束',
+                    html: `
+                        <div class="text-center">
+                            <p class="text-gray-600 mb-2">本次答對成績</p>
+                            <h2 class="text-4xl font-bold text-blue-600">${practiceCorrectCount} / ${currentQuestions.length}</h2>
+                            <p class="text-sm text-gray-400 mt-4">紀錄已儲存</p>
+                        </div>
+                    `, 
+                    icon: 'success'
+                }).then(() => location.reload());
             }
         }
 
-        // --- 核心功能 4: 後台 (LocalStorage) ---
-        function saveLog(score) {
-            const logs = JSON.parse(localStorage.getItem('gh_exam_logs_v2') || '[]');
-            logs.unshift({ 
-                date: new Date().toLocaleString(), 
-                ip: `192.168.1.${Math.floor(Math.random()*255)}`, // 模擬 IP
-                subject: currentSubjectName, 
-                score: score 
-            });
-            localStorage.setItem('gh_exam_logs_v2', JSON.stringify(logs));
+        // --- 核心功能 4: 錯題管理 (LocalStorage) ---
+        function saveWrongQuestion(subject, qObj) {
+            const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
+            if (!db[subject]) db[subject] = [];
+            
+            // 避免重複加入 (比對題目內容)
+            const exists = db[subject].some(item => item.q === qObj.q);
+            if (!exists) {
+                db[subject].push(qObj);
+                localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
+            }
         }
 
-        // 隱藏入口：點擊 Footer 版權文字 3 次
+        function removeWrongQuestion(subject, qObj) {
+            const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
+            if (db[subject]) {
+                db[subject] = db[subject].filter(item => item.q !== qObj.q);
+                localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
+            }
+        }
+
+        // --- 核心功能 5: 後台紀錄 (LocalStorage) ---
+        function saveLog(modeStr, resultStr) {
+            const logs = JSON.parse(localStorage.getItem('gh_exam_logs_v3') || '[]');
+            logs.unshift({ 
+                date: new Date().toLocaleString(), 
+                subject: currentSubjectName, 
+                mode: modeStr,
+                result: resultStr
+            });
+            localStorage.setItem('gh_exam_logs_v3', JSON.stringify(logs));
+        }
+
+        // 隱藏入口
         let clicks = 0, timer;
         document.getElementById('secret-trigger').addEventListener('click', () => {
             clicks++; clearTimeout(timer); timer = setTimeout(() => clicks=0, 800);
@@ -366,7 +443,7 @@
                     inputPlaceholder: 'Password',
                     showCancelButton:true
                 }).then(r => {
-                    if(r.value === 'admin') showLogs(); // 預設密碼 admin
+                    if(r.value === 'admin') showLogs(); 
                     else if(r.value) Swal.fire('密碼錯誤', '', 'error');
                 });
                 clicks = 0;
@@ -374,17 +451,30 @@
         });
 
         function showLogs() {
-            const logs = JSON.parse(localStorage.getItem('gh_exam_logs_v2') || '[]');
+            const logs = JSON.parse(localStorage.getItem('gh_exam_logs_v3') || '[]');
             const tbody = document.getElementById('admin-log-body');
             if (logs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
             } else {
                 tbody.innerHTML = logs.map(l => `
                     <tr class="hover:bg-gray-50 transition border-b last:border-0">
-                        <td class="p-4 text-gray-600">${l.date}</td>
-                        <td class="p-4 font-mono text-xs text-gray-400">${l.ip}</td>
+                        <td class="p-4 text-gray-600 text-xs">${l.date}</td>
                         <td class="p-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${l.subject}</span></td>
-                        <td class="p-4 font-bold ${l.score>=60?'text-green-600':'text-red-600'}">${l.score}</td>
+                        <td class="p-4 text-sm text-gray-700">${l.mode}</td>
+                        <td class="p-4 font-bold text-gray-800">${l.result}</td>
                     </tr>
                 `).join('');
- 
+            }
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function clearLogs() {
+            if(confirm('確定要清空所有考試紀錄嗎？')) { 
+                localStorage.removeItem('gh_exam_logs_v3'); 
+                showLogs(); 
+            }
+        }
+    </script>
+</body>
+</html>
+        
