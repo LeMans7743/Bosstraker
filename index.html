@@ -1,145 +1,285 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOSS 重生時間追蹤器</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body { font-family: 'Inter', sans-serif; }
-.boss-btn.selected { background-color: #4f46e5; color: white; }
-.flash-blue { animation: flashBlue 1s; }
-.flash-red { animation: flashRed 1s; }
-@keyframes flashBlue { 0%,100%{background-color:#60a5fa;}50%{background-color:#3b82f6;} }
-@keyframes flashRed { 0%,100%{background-color:#f87171;}50%{background-color:#ef4444;} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub 題庫測驗系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; }
+        .hidden { display: none; }
+        .option-card { cursor: pointer; transition: all 0.2s; }
+        .option-card:hover { background-color: #f1f5f9; }
+        .correct { background-color: #dcfce7 !important; border-color: #16a34a !important; }
+        .wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; }
+        /* 載入動畫 */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen p-4">
-<div class="bg-white shadow-xl rounded-2xl w-full max-w-5xl p-4 flex flex-col items-center space-y-4">
-  <div class="w-full">
-    <h2 class="text-xl font-semibold text-gray-700 mb-2">追蹤列表</h2>
-    <div id="boss-list" class="flex flex-col gap-2"></div>
-  </div>
+<body class="min-h-screen flex flex-col text-gray-800">
 
-  <div class="w-full bg-gray-50 p-4 rounded-xl shadow-inner">
-    <h2 class="text-xl font-semibold text-gray-700 mb-2">新增追蹤項目</h2>
-    <form id="add-boss-form" class="space-y-2">
-      <div class="space-y-1">
-        <label class="block text-sm font-medium text-gray-700">BOSS 名稱</label>
-        <div id="boss-buttons" class="grid grid-cols-2 md:grid-cols-3 gap-2">
-          <button type="button" data-boss-name="雪毛怪人" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">雪毛怪人</button>
-          <button type="button" data-boss-name="咕咕鐘" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">咕咕鐘</button>
-          <button type="button" data-boss-name="測試王" class="boss-btn p-2 border border-gray-300 rounded-md text-sm">測試王</button>
+    <nav class="bg-slate-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">雲端題庫測驗系統</h1>
+            <button onclick="location.reload()" class="text-sm bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded">重置</button>
         </div>
-        <input type="hidden" id="boss-name" required>
-      </div>
-      <div class="flex space-x-2">
-        <div class="flex-1">
-          <label for="boss-channel" class="block text-sm font-medium text-gray-700">頻道</label>
-          <input type="number" id="boss-channel" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
+    </nav>
+
+    <main class="container mx-auto p-4 flex-grow max-w-4xl">
+        
+        <div id="setup-view" class="bg-white p-8 rounded-xl shadow-md mt-6">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">測驗設定</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">選擇科目</label>
+                    <select id="subject-select" class="w-full border p-2 rounded">
+                        <option value="chinese">國文</option>
+                        <option value="english">英文</option>
+                        <option value="politics">政治</option>
+                        <option value="military">軍事</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">題目數量</label>
+                    <input type="number" id="question-count" value="50" min="1" class="w-full border p-2 rounded">
+                </div>
+            </div>
+
+            <div id="loading-spinner" class="hidden text-center">
+                <div class="loader"></div>
+                <p>正在從題庫讀取題目...</p>
+            </div>
+
+            <div class="flex gap-4 mt-4" id="action-buttons">
+                <button onclick="prepareExam('exam')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded shadow">
+                    考卷模式 (計分)
+                </button>
+                <button onclick="prepareExam('practice')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded shadow">
+                    練習模式 (即時)
+                </button>
+            </div>
         </div>
-        <div class="flex-1 flex items-end">
-          <button type="button" id="lock-btn" class="px-2 py-1 bg-yellow-400 text-white rounded text-sm">鎖定 BOSS</button>
-          <button type="button" id="unlock-btn" class="hidden px-2 py-1 bg-gray-400 text-white rounded text-sm ml-2">解除鎖定</button>
+
+        <div id="exam-mode-view" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4 sticky top-4 z-40 flex justify-between items-center border-l-4 border-blue-500">
+                <h2 class="font-bold text-lg" id="exam-info">測驗中</h2>
+                <span class="text-xl font-mono font-bold text-blue-600" id="exam-timer">00:00</span>
+            </div>
+            <div id="exam-questions-container" class="space-y-6 pb-20"></div>
+            <div class="fixed bottom-0 left-0 w-full bg-white p-4 shadow-up text-center z-50 border-t">
+                <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-10 rounded-full shadow">交卷</button>
+            </div>
         </div>
-      </div>
-      <button type="submit" class="w-full py-1 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">新增或更新項目</button>
-    </form>
-  </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-messaging.js"></script>
+        <div id="practice-mode-view" class="hidden max-w-2xl mx-auto">
+            <div class="flex justify-between mb-2">
+                <span id="practice-progress" class="text-gray-500"></span>
+                <span class="bg-gray-200 px-2 rounded text-sm">練習模式</span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h3 class="text-lg font-bold mb-6" id="practice-q-text">Loading...</h3>
+                <div id="practice-options" class="space-y-3"></div>
+                <div id="practice-feedback" class="hidden mt-6 p-4 rounded bg-gray-50 border"></div>
+            </div>
+            <div class="mt-4 text-right">
+                <button id="btn-practice-next" onclick="nextPracticeQuestion()" class="hidden bg-blue-600 text-white py-2 px-6 rounded shadow">下一題</button>
+            </div>
+        </div>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyC6mq6ukjzpNmaIy5dLewwHqrJTTpaB2jA",
-  authDomain: "bosstrackerweb.firebaseapp.com",
-  projectId: "bosstrackerweb",
-  storageBucket: "bosstrackerweb.firebasestorage.app",
-  messagingSenderId: "620047423570",
-  appId: "1:620047423570:web:2d1881a9edc1a1b6cba78b"
-};
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
-const vapidKey = "BBQv_vF-t2r8ALxzDZj9xcSlsrJbJ73nI19w6YeLZVdoLERxBJ88NI8pucgS9xN2_KO-osGLJ-oHLpLNcYZbEQc";
+    </main>
 
-async function requestPermission() {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      const registration = await navigator.serviceWorker.register('/Bosstraker/firebase-messaging-sw.js');
-      messaging.useServiceWorker(registration);
-      const fcmToken = await messaging.getToken({ vapidKey });
-      console.log('FCM Token:', fcmToken);
-    } else console.log('通知權限未授權');
-  } catch(e) { console.error(e); }
-}
-requestPermission();
+    <footer class="text-center text-gray-400 py-6 text-xs mt-auto">
+        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4">© 2025 Exam System</p>
+    </footer>
 
-const bossButtons = document.querySelectorAll('.boss-btn');
-const bossInput = document.getElementById('boss-name');
-const bossList = document.getElementById('boss-list');
-const lockBtn = document.getElementById('lock-btn');
-const unlockBtn = document.getElementById('unlock-btn');
-const BOSS_TIMES = { '雪毛怪人':[45,68], '咕咕鐘':[68,90], '測試王':[5/60,10/60] };
-let selectedBoss = null;
-let lockedBoss = null;
-
-lockBtn.addEventListener('click',()=>{
-  if(!selectedBoss){alert('請先選擇 BOSS！');return;}
-  lockedBoss = selectedBoss;
-  bossButtons.forEach(b=>{
-    if(b.dataset.bossName!==lockedBoss){b.disabled=true;b.classList.remove('selected');}
-  });
-  lockBtn.classList.add('hidden');
-  unlockBtn.classList.remove('hidden');
-});
-
-unlockBtn.addEventListener('click',()=>{
-  lockedBoss=null;
-  bossButtons.forEach(b=>b.disabled=false);
-  lockBtn.classList.remove('hidden');
-  unlockBtn.classList.add('hidden');
-});
-
-bossButtons.forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    if(!lockedBoss){
-      bossButtons.forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-      bossInput.value=btn.dataset.bossName;
-      selectedBoss=btn.dataset.bossName;
-    }
-  });
-});
-
-function sendNotification(title){
-  if(Notification.permission==='granted') new Notification(title);
-}
-
-function createBossItem(bossName, channel, minRespawn, maxRespawn){
-  const bossItem=document.createElement('div');
-  bossItem.className='bg-green-500 rounded-xl shadow-lg p-2 flex justify-between items-center';
-  bossItem.dataset.bossName=bossName;
-  bossItem.dataset.channel=channel;
-  bossItem.innerHTML=`
-    <p class="font-bold">${bossName}</p>
-    <p class="text-sm text-gray-50">頻道: ${channel}</p>
-    <p class="text-sm text-gray-50">倒數計時: <span class="countdown"></span></p>
-    <div class="flex gap-1">
-      <button class="kill-btn px-2 py-0.5 text-xs bg-yellow-400 text-white rounded">已擊殺</button>
-      <button class="delete-btn px-2 py-0.5 text-xs bg-red-500 text-white rounded">刪除</button>
+    <div id="admin-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl rounded-lg shadow-xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b flex justify-between">
+                <h2 class="text-xl font-bold">後台紀錄</h2>
+                <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-2xl">&times;</button>
+            </div>
+            <div class="overflow-auto flex-grow">
+                <table class="w-full text-sm text-left"><thead class="bg-gray-100"><tr><th class="p-3">時間</th><th class="p-3">IP</th><th class="p-3">科目</th><th class="p-3">分數</th></tr></thead><tbody id="admin-log-body"></tbody></table>
+            </div>
+            <div class="p-4 border-t text-right"><button onclick="clearLogs()" class="text-red-500">清空紀錄</button></div>
+        </div>
     </div>
-  `;
-  const countdownEl=bossItem.querySelector('.countdown');
-  let notifiedEarly=false;
-  let notifiedLate=false;
-  function updateCountdown(){
-    const now=new Date();
+
+    <script>
+        // 全域變數
+        let currentQuestions = [];
+        let currentSubjectName = "";
+        let currentMode = "";
+        let scorePerQ = 0;
+        let currentQIndex = 0;
+        let timerInterval;
+
+        // 1. 讀取題庫 (AJAX Fetch)
+        async function prepareExam(mode) {
+            const subjectCode = document.getElementById('subject-select').value;
+            const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
+            const qCount = parseInt(document.getElementById('question-count').value);
+            
+            // UI 切換
+            document.getElementById('action-buttons').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+
+            try {
+                // 從 JSON 檔案讀取
+                // 注意：這行代碼在 GitHub Pages 上運作正常，但在本機直接點開 html 可能會被瀏覽器擋下 (CORS)
+                const response = await fetch(`questions/${subjectCode}.json`);
+                if (!response.ok) throw new Error("找不到題庫檔案");
+                
+                const allQuestions = await response.json();
+                
+                // 隨機選題
+                currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, qCount);
+                currentSubjectName = subjectText;
+                scorePerQ = (100 / currentQuestions.length).toFixed(1);
+
+                if(currentQuestions.length === 0) throw new Error("題庫為空");
+
+                // 開始測驗
+                document.getElementById('setup-view').classList.add('hidden');
+                if (mode === 'exam') startExamMode();
+                else startPracticeMode();
+
+            } catch (error) {
+                Swal.fire('讀取失敗', '無法載入題庫，請確認檔案已上傳至 GitHub。\n' + error.message, 'error');
+                document.getElementById('action-buttons').classList.remove('hidden');
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+        }
+
+        // 2. 考卷模式
+        function startExamMode() {
+            currentMode = 'exam';
+            document.getElementById('exam-mode-view').classList.remove('hidden');
+            document.getElementById('exam-info').innerText = `${currentSubjectName} (共${currentQuestions.length}題)`;
+            
+            const container = document.getElementById('exam-questions-container');
+            container.innerHTML = currentQuestions.map((q, idx) => `
+                <div class="bg-white p-5 rounded border shadow-sm">
+                    <p class="font-bold mb-3">${idx+1}. ${q.q}</p>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, i) => {
+                            const val = ["A","B","C","D"][i];
+                            return `<label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="q_${idx}" value="${val}" class="w-4 h-4 text-blue-600"><span>${opt}</span></label>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // 計時器
+            let sec = 0;
+            timerInterval = setInterval(() => {
+                sec++;
+                document.getElementById('exam-timer').innerText = 
+                    `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function submitExam() {
+            clearInterval(timerInterval);
+            let correct = 0;
+            currentQuestions.forEach((q, idx) => {
+                const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
+                if(ans === q.ans) correct++;
+            });
+            let score = Math.min(100, Math.round(correct * parseFloat(scorePerQ))); // 確保不超過100
+            if(score > 99 && correct < currentQuestions.length) score = 99; // 修正捨入誤差
+
+            saveLog(score);
+            Swal.fire({ title: '成績結算', html: `得分：<b class="text-4xl text-blue-600">${score}</b><br>答對 ${correct}/${currentQuestions.length} 題`, icon: 'success' })
+                .then(() => location.reload());
+        }
+
+        // 3. 練習模式
+        function startPracticeMode() {
+            currentMode = 'practice';
+            document.getElementById('practice-mode-view').classList.remove('hidden');
+            currentQIndex = 0;
+            renderPracticeQ();
+        }
+
+        function renderPracticeQ() {
+            const q = currentQuestions[currentQIndex];
+            document.getElementById('practice-progress').innerText = `進度：${currentQIndex+1}/${currentQuestions.length}`;
+            document.getElementById('practice-q-text').innerText = q.q;
+            
+            const optsDiv = document.getElementById('practice-options');
+            optsDiv.innerHTML = '';
+            document.getElementById('practice-feedback').classList.add('hidden');
+            document.getElementById('btn-practice-next').classList.add('hidden');
+
+            q.options.forEach((opt, i) => {
+                const val = ["A","B","C","D"][i];
+                const btn = document.createElement('div');
+                btn.className = "option-card border p-3 rounded bg-gray-50 flex items-center";
+                btn.innerHTML = `<span class="w-6 h-6 bg-gray-200 rounded-full flex justify-center items-center mr-3 text-xs font-bold">${val}</span>${opt}`;
+                btn.onclick = () => checkPractice(btn, val, q.ans);
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function checkPractice(el, userAns, correctAns) {
+            document.querySelectorAll('.option-card').forEach(d => d.onclick = null); // 鎖定
+            const feedback = document.getElementById('practice-feedback');
+            feedback.classList.remove('hidden');
+            document.getElementById('btn-practice-next').classList.remove('hidden');
+
+            if(userAns === correctAns) {
+                el.classList.add('correct');
+                feedback.innerHTML = `<span class="text-green-600 font-bold">答對了！</span>`;
+            } else {
+                el.classList.add('wrong');
+                feedback.innerHTML = `<span class="text-red-600 font-bold">答錯了！</span> 正確答案是：${correctAns}`;
+                // 顯示正確選項
+                const correctIdx = ["A","B","C","D"].indexOf(correctAns);
+                document.getElementById('practice-options').children[correctIdx].classList.add('correct');
+            }
+        }
+
+        function nextPracticeQuestion() {
+            if(++currentQIndex < currentQuestions.length) renderPracticeQ();
+            else Swal.fire('完成', '已完成所有練習！', 'success').then(() => location.reload());
+        }
+
+        // 4. 後台功能
+        function saveLog(score) {
+            const logs = JSON.parse(localStorage.getItem('gh_exam_logs') || '[]');
+            logs.unshift({ date: new Date().toLocaleString(), ip: '192.168.1.X (Sim)', subject: currentSubjectName, score: score });
+            localStorage.setItem('gh_exam_logs', JSON.stringify(logs));
+        }
+
+        let clicks = 0, timer;
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            clicks++; clearTimeout(timer); timer = setTimeout(() => clicks=0, 800);
+            if(clicks === 3) {
+                Swal.fire({title:'後台登入', input:'password', showCancelButton:true}).then(r => {
+                    if(r.value === 'admin') showLogs();
+                });
+                clicks = 0;
+            }
+        });
+
+        function showLogs() {
+            const logs = JSON.parse(localStorage.getItem('gh_exam_logs') || '[]');
+            document.getElementById('admin-log-body').innerHTML = logs.map(l => `
+                <tr class="border-b"><td class="p-3">${l.date}</td><td class="p-3 text-gray-500">${l.ip}</td><td class="p-3">${l.subject}</td><td class="p-3 font-bold">${l.score}</td></tr>
+            `).join('');
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function clearLogs() {
+            if(confirm('確定清空？')) { localStorage.removeItem('gh_exam_logs'); showLogs(); }
+        }
+    </script>
+</body>
+</html>
     let diffMin=(minRespawn-now)/1000;
     let diffMax=(maxRespawn-now)/1000;
     let bgClass='',text='';
