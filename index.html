@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲端題庫測驗系統 V2.0</title>
+    <title>雲端題庫測驗系統 V2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -15,15 +15,14 @@
         .wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* 讓練習模式的點擊區域涵蓋全螢幕 */
-        .click-area { min-height: 80vh; }
+        .click-area { min-height: 80vh; } /* 擴大點擊範圍 */
     </style>
 </head>
 <body class="flex flex-col text-gray-800">
 
     <nav class="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wider">線上測驗系統 <span class="text-xs bg-yellow-500 text-black px-1 rounded">V2</span></h1>
+            <h1 class="text-xl font-bold tracking-wider">線上測驗系統 <span class="text-xs bg-green-500 text-white px-1 rounded">V2.1</span></h1>
             <div class="space-x-2">
                 <button onclick="openHistory()" class="text-sm bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded transition">我的紀錄</button>
                 <button onclick="location.reload()" class="text-sm bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded transition">回首頁</button>
@@ -33,6 +32,8 @@
 
     <main class="container mx-auto p-4 flex-grow max-w-4xl">
         
+        <input type="file" id="manual-file-input" accept=".json" class="hidden" onchange="handleManualFile(this)">
+
         <div id="setup-view" class="bg-white p-8 rounded-xl shadow-lg mt-6">
             <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 border-b pb-4">測驗設定</h2>
             
@@ -45,6 +46,9 @@
                         <option value="politics">政治</option>
                         <option value="military">軍事</option>
                     </select>
+                    <p class="text-xs text-blue-500 mt-2 cursor-pointer hover:underline text-right" onclick="document.getElementById('manual-file-input').click()">
+                        (或是點此上傳本機 JSON 檔)
+                    </p>
                 </div>
                 <div>
                     <label class="block text-gray-700 font-bold mb-2">題目數量</label>
@@ -54,7 +58,7 @@
 
             <div id="loading-spinner" class="hidden text-center py-4">
                 <div class="loader"></div>
-                <p class="text-gray-500 animate-pulse">正在讀取題庫...</p>
+                <p class="text-gray-500 animate-pulse">正在搜尋題庫...</p>
             </div>
 
             <div class="flex gap-4 flex-col sm:flex-row" id="action-buttons">
@@ -65,18 +69,22 @@
                     進入練習模式 (即時)
                 </button>
             </div>
+            
+            <p class="text-xs text-gray-400 text-center mt-6">
+                提示：若在本機執行，請使用「上傳本機 JSON」或架設 Live Server。
+            </p>
         </div>
 
         <div id="exam-mode-view" class="hidden">
             <div class="bg-white p-4 rounded-lg shadow-md mb-6 sticky top-20 z-40 flex justify-between items-center border-l-4 border-blue-600">
                 <h2 class="font-bold text-lg" id="exam-info">測驗中</h2>
                 <div class="text-right">
-                    <div class="text-xs text-gray-500">已用時間</div>
+                    <div class="text-xs text-gray-500">時間</div>
                     <span class="text-2xl font-mono font-bold text-blue-600" id="exam-timer">00:00</span>
                 </div>
             </div>
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
-            <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-50">
+            <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur p-4 shadow-lg text-center z-50">
                 <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full max-w-md">交卷並計算分數</button>
             </div>
         </div>
@@ -86,7 +94,7 @@
                 <span id="practice-progress" class="text-gray-500 font-medium"></span>
                 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">練習模式</span>
             </div>
-            <div class="bg-white p-8 rounded-2xl shadow-xl min-h-[400px] flex flex-col relative" id="practice-card-body">
+            <div class="bg-white p-8 rounded-2xl shadow-xl min-h-[400px] flex flex-col relative">
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold mb-8 text-gray-800 leading-relaxed" id="practice-q-text">Loading...</h3>
                     <div id="practice-options" class="space-y-4"></div>
@@ -112,8 +120,7 @@
                 <button onclick="document.getElementById('history-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <div class="overflow-auto flex-grow bg-gray-50 p-4">
-                <div id="history-list" class="space-y-3">
-                    </div>
+                <div id="history-list" class="space-y-3"></div>
             </div>
             <div class="p-4 border-t bg-white rounded-b-xl text-right">
                 <button onclick="clearHistory()" class="text-red-500 text-sm hover:underline">清空所有紀錄</button>
@@ -137,10 +144,265 @@
         // --- 變數 ---
         let currentQuestions = [];
         let currentSubjectName = "";
-        let currentMode = "";
+        let currentMode = ""; // 'exam' or 'practice'
         let currentQIndex = 0;
         let timerInterval;
-        let practiceAnswered = false; // 練習模式：是否已作答
+        let practiceAnswered = false;
+        let targetMode = ""; // 暫存欲進入的模式
+
+        // --- 1. 準備考試 (入口) ---
+        async function prepareExam(mode, customQuestions = null, customSubject = null) {
+            targetMode = mode;
+
+            // 錯題重測邏輯
+            if (customQuestions) {
+                currentQuestions = customQuestions;
+                currentSubjectName = customSubject + " (錯題重測)";
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('history-modal').classList.add('hidden');
+                startExamMode();
+                return;
+            }
+
+            // 一般出題邏輯
+            const subjectCode = document.getElementById('subject-select').value;
+            const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
+            
+            document.getElementById('action-buttons').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+
+            try {
+                // 嘗試 Fetch 讀取 (GitHub / Server 環境)
+                // 增加 timestamp 防止快取
+                const response = await fetch(`questions/${subjectCode}.json?t=${Date.now()}`);
+                
+                if (!response.ok) throw new Error("Fetch Error");
+                
+                const allQuestions = await response.json();
+                processQuestionsAndStart(allQuestions, subjectText);
+
+            } catch (error) {
+                // 失敗處理 (通常是本機 CORS 或路徑錯誤)
+                console.warn("自動讀取失敗，轉為手動引導", error);
+                document.getElementById('loading-spinner').classList.add('hidden');
+                
+                Swal.fire({
+                    title: '讀取題庫失敗',
+                    html: `無法自動從 <b>questions/${subjectCode}.json</b> 讀取。<br>如果您是在本機直接開啟，請手動選擇檔案。`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '📂 選擇本機 JSON 檔',
+                    cancelButtonText: '取消'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('manual-file-input').click();
+                    } else {
+                        document.getElementById('action-buttons').classList.remove('hidden');
+                    }
+                });
+            }
+        }
+
+        // --- 1.1 手動檔案處理 ---
+        function handleManualFile(input) {
+            if (input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    // 使用檔名去除副檔名作為科目名稱
+                    const subjectName = file.name.replace('.json', '');
+                    processQuestionsAndStart(json, subjectName);
+                } catch (err) {
+                    Swal.fire('格式錯誤', '無法解析此 JSON 檔案', 'error');
+                }
+            };
+            reader.readAsText(file);
+            // 清空 input 讓下次能重複選同檔
+            input.value = '';
+        }
+
+        // --- 1.2 題目處理與啟動 ---
+        function processQuestionsAndStart(allQuestions, subjectName) {
+            const qCount = parseInt(document.getElementById('question-count').value);
+            const actualCount = Math.min(qCount, allQuestions.length);
+            
+            // 亂數洗牌並切分
+            currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, actualCount);
+            currentSubjectName = subjectName;
+
+            if (currentQuestions.length === 0) {
+                Swal.fire('錯誤', '題庫是空的！', 'error');
+                document.getElementById('action-buttons').classList.remove('hidden');
+                document.getElementById('loading-spinner').classList.add('hidden');
+                return;
+            }
+
+            // UI 切換
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('action-buttons').classList.remove('hidden'); // 還原按鈕狀態供下次用
+
+            if (targetMode === 'exam') startExamMode();
+            else startPracticeMode();
+        }
+
+
+        // --- 2. 考卷模式 ---
+        function startExamMode() {
+            currentMode = 'exam';
+            document.getElementById('exam-mode-view').classList.remove('hidden');
+            document.getElementById('exam-info').innerText = currentSubjectName;
+            window.scrollTo(0, 0);
+
+            const container = document.getElementById('exam-questions-container');
+            container.innerHTML = currentQuestions.map((q, idx) => `
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <div class="flex gap-2 mb-3">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded h-fit">Q${idx+1}</span>
+                        <p class="font-bold text-lg text-gray-800">${q.q}</p>
+                    </div>
+                    <div class="space-y-2 pl-2">
+                        ${q.options.map((opt, i) => {
+                            const val = ["A","B","C","D"][i];
+                            return `<label class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer"><input type="radio" name="q_${idx}" value="${val}" class="mt-1 w-5 h-5 text-blue-600"><span class="text-gray-600">${opt}</span></label>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            let sec = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                sec++;
+                document.getElementById('exam-timer').innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function submitExam() {
+            clearInterval(timerInterval);
+            let correctCount = 0;
+            let wrongQuestionsList = [];
+
+            currentQuestions.forEach((q, idx) => {
+                const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
+                if(ans === q.ans) {
+                    correctCount++;
+                } else {
+                    wrongQuestionsList.push(q);
+                }
+            });
+
+            let score = Math.round(correctCount * (100 / currentQuestions.length));
+            if(correctCount === currentQuestions.length) score = 100;
+
+            saveHistory(score, wrongQuestionsList);
+            
+            Swal.fire({
+                title: '測驗結果',
+                html: `<div class="text-center">
+                        <div class="text-6xl font-bold ${score>=60?'text-green-600':'text-red-600'} mb-2">${score}</div>
+                        <p class="text-gray-500">答對 ${correctCount} / ${currentQuestions.length} 題</p>
+                       </div>`,
+                icon: score >= 60 ? 'success' : 'warning',
+                confirmButtonText: '確定'
+            }).then(() => {
+                if(currentSubjectName.includes("(錯題重測)")) {
+                    location.reload();
+                } else {
+                    openHistory(); 
+                    document.getElementById('exam-mode-view').classList.add('hidden');
+                    document.getElementById('setup-view').classList.remove('hidden');
+                }
+            });
+        }
+
+        // --- 3. 練習模式 (含點擊空白下一題) ---
+        function startPracticeMode() {
+            currentMode = 'practice';
+            document.getElementById('practice-mode-view').classList.remove('hidden');
+            currentQIndex = 0;
+            renderPracticeQ();
+        }
+
+        function renderPracticeQ() {
+            practiceAnswered = false;
+            document.getElementById('practice-hint').classList.add('hidden');
+            
+            const q = currentQuestions[currentQIndex];
+            document.getElementById('practice-progress').innerText = `題目 ${currentQIndex+1} / ${currentQuestions.length}`;
+            document.getElementById('practice-q-text').innerText = q.q;
+            
+            const optsDiv = document.getElementById('practice-options');
+            optsDiv.innerHTML = '';
+            document.getElementById('practice-feedback').classList.add('hidden');
+
+            q.options.forEach((opt, i) => {
+                const val = ["A","B","C","D"][i];
+                const btn = document.createElement('div');
+                btn.className = "option-card bg-gray-50 p-4 rounded-xl flex items-center text-gray-700 font-medium";
+                btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm">${val}</span>${opt}`;
+                
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // 阻止冒泡
+                    checkPractice(btn, val, q.ans);
+                });
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function checkPractice(el, userAns, correctAns) {
+            if (practiceAnswered) return;
+
+            practiceAnswered = true;
+            document.querySelectorAll('.option-card').forEach(d => d.style.pointerEvents = 'none');
+            
+            const feedback = document.getElementById('practice-feedback');
+            feedback.classList.remove('hidden');
+            document.getElementById('practice-hint').classList.remove('hidden'); // 顯示提示
+
+            if(userAns === correctAns) {
+                el.classList.add('correct');
+                feedback.innerHTML = `<div class="text-green-700 font-bold">回答正確！</div>`;
+            } else {
+                el.classList.add('wrong');
+                feedback.innerHTML = `<div class="text-red-600 font-bold">回答錯誤！正確答案是：${correctAns}</div>`;
+                const correctIdx = ["A","B","C","D"].indexOf(correctAns);
+                if(correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
+            }
+        }
+
+        function nextPracticeQuestion() {
+            if(++currentQIndex < currentQuestions.length) {
+                renderPracticeQ();
+            } else {
+                Swal.fire('練習結束', '您已完成所有題目！', 'success').then(() => location.reload());
+            }
+        }
+
+        // 點擊空白處下一題監聽器
+        document.addEventListener('click', (e) => {
+            if (currentMode === 'practice' && practiceAnswered) {
+                // 如果點到 Swal 彈窗或按鈕，不觸發
+                if (e.target.closest('.swal2-container') || e.target.tagName === 'BUTTON') return;
+                nextPracticeQuestion();
+            }
+        });
+        document.addEventListener('keydown', () => {
+             if (currentMode === 'practice' && practiceAnswered) nextPracticeQuestion();
+        });
+
+
+        // --- 4. 紀錄系統 ---
+        function saveHistory(score, wrongList) {
+            const history = JSON.parse(localStorage.getItem('my_exam_history_v2') || '[]');
+            const log = {
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                subject: currentSubjectName,
+                score: score,
+                total: currentQuest        let practiceAnswered = false; // 練習模式：是否已作答
 
         // --- 1. 讀取題庫 ---
         async function prepareExam(mode, customQuestions = null, customSubject = null) {
