@@ -1,0 +1,2002 @@
+[
+  {
+    "q": "The unit of ______ in France is the franc.",
+    "options": [
+      "(A) coin",
+      "(B) colony",
+      "(C) currency",
+      "(D) current"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Too many people are breaking the speed limit on the highway, so the police are planning to do something to ______ it.",
+    "options": [
+      "(A) enforce",
+      "(B) force",
+      "(C) insist",
+      "(D) ensure"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "When Bobby doesn't want to do what he's told, he can be as ______as a mule.",
+    "options": [
+      "(A) firm",
+      "(B) obstinate",
+      "(C) solid",
+      "(D) steady"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "When you first see the Himalayas, you can't help being awed by their ______.",
+    "options": [
+      "(A) honor",
+      "(B) majesty",
+      "(C) rank",
+      "(D) vanity"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "If you want to be good at something, you have to have the ______ to keep practicing.",
+    "options": [
+      "(A) discipline",
+      "(B) doctrine",
+      "(C) obedience",
+      "(D) overcharge"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Christmas is a time to ______ with friends and family.",
+    "options": [
+      "(A) weigh",
+      "(B) celebrate",
+      "(C) elf",
+      "(D) wishing"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Hang the ______ over the fireplace.",
+    "options": [
+      "(A) gravy",
+      "(B) stockings",
+      "(C) cousin",
+      "(D) excited"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "After his latest film came out, the actor's ______ kept on growing.",
+    "options": [
+      "(A) popularity",
+      "(B) rocking",
+      "(C) probably",
+      "(D) remember"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Jim played an important ______ in that movie.",
+    "options": [
+      "(A) honoring",
+      "(B) marrying",
+      "(C) role",
+      "(D) strange"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Dan likes to eat ______ food.",
+    "options": [
+      "(A) nutritious",
+      "(B) chips",
+      "(C) hang",
+      "(D) vase"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "They ______ great food and red wine at that restaurant.",
+    "options": [
+      "(A) throwing",
+      "(B) serve",
+      "(C) trick",
+      "(D) feed"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "What ______ did you use to make that cake?",
+    "options": [
+      "(A) definitely",
+      "(B) ingredients",
+      "(C) tofu",
+      "(D) fine"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "I always fall ______ when we go running.",
+    "options": [
+      "(A) stand",
+      "(B) behind",
+      "(C) printing",
+      "(D) mistletoe"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "We were all ______ excited about the good news.",
+    "options": [
+      "(A) hungry",
+      "(B) celebrate",
+      "(C) family",
+      "(D) extremely"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Everyone has the right to ______.",
+    "options": [
+      "(A) live a happy life",
+      "(B) announced",
+      "(C) extraordinarily",
+      "(D) entertaining"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "The artist's latest painting is a(n) ______.",
+    "options": [
+      "(A) excitement",
+      "(B) promises",
+      "(C) adventures",
+      "(D) masterpiece"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I think I know how to ______ with this problem.",
+    "options": [
+      "(A) deal",
+      "(B) pressing",
+      "(C) sit",
+      "(D) printer"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "______ is required to enter that Web site.",
+    "options": [
+      "(A) Instruct",
+      "(B) Registration",
+      "(C) Prepare",
+      "(D) Couch"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The future of our company looks ______.",
+    "options": [
+      "(A) promote",
+      "(B) emotion",
+      "(C) promising",
+      "(D) promised"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Father and son must communicate with ______.",
+    "options": [
+      "(A) himself",
+      "(B) each other",
+      "(C) each others",
+      "(D) themselves"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "He ______ his lips.",
+    "options": [
+      "(A) peas",
+      "(B) ham",
+      "(C) kidding",
+      "(D) licked"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Every year I like to spend time ______ for Christmas.",
+    "options": [
+      "(A) hang",
+      "(B) sleigh",
+      "(C) ornaments",
+      "(D) preparing"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "The nurse took my ______.",
+    "options": [
+      "(A) voice",
+      "(B) temperature",
+      "(C) needles",
+      "(D) pills"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Do I have a ______?",
+    "options": [
+      "(A) throw",
+      "(B) tomorrow",
+      "(C) breathe",
+      "(D) fever"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "The train ______ about 7,000 people everyday.",
+    "options": [
+      "(A) carries",
+      "(B) treat",
+      "(C) visit",
+      "(D) travels"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Kaohsung is the best place to get great food at good ______.",
+    "options": [
+      "(A) pills",
+      "(B) prices",
+      "(C) meant",
+      "(D) still"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "What if you get ______ along the way?",
+    "options": [
+      "(A) screen",
+      "(B) fax",
+      "(C) tired",
+      "(D) try"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "We need to buy a whiteboard and a roll-down ______.",
+    "options": [
+      "(A) screen",
+      "(B) join",
+      "(C) dialing",
+      "(D) travel"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "To ______ a fax, put the paper here.",
+    "options": [
+      "(A) visited",
+      "(B) size",
+      "(C) copying",
+      "(D) send"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Please show me how to ______ this package.",
+    "options": [
+      "(A) wrap",
+      "(B) besides",
+      "(C) smart",
+      "(D) early"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Let's open up a real cookbook and get to ______.",
+    "options": [
+      "(A) work",
+      "(B) nervously",
+      "(C) silent",
+      "(D) aircraft"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "How do I send a package ______?",
+    "options": [
+      "(A) raining",
+      "(B) blue shirt",
+      "(C) silly",
+      "(D) overseas"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "She has been here______.",
+    "options": [
+      "(A) after 1973",
+      "(B) in 1973",
+      "(C) for 1973",
+      "(D) since 1973"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "A: Why did those young men shave their heads? B: They've just joined the Army. They're new ______.",
+    "options": [
+      "(A) retired men",
+      "(B) recruits",
+      "(C) captains",
+      "(D) students"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The United Nation is an international organization that promotes _______ among countrues.",
+    "options": [
+      "(A) poverty",
+      "(B) secrecy",
+      "(C) competition",
+      "(D) cooperation"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I was in New York for six months. I ______ Lackland AFB.",
+    "options": [
+      "(A) was promoted to",
+      "(B) was served",
+      "(C) was stationed at",
+      "(D) was lived in"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Bill is an ensign.  He's in the ______.",
+    "options": [
+      "(A) Army",
+      "(B) Navy",
+      "(C) Air Force",
+      "(D) Marine Corps"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Last month Bob was a lieutenant; now he's a captain. He received a ______.",
+    "options": [
+      "(A) promotion",
+      "(B) retirement",
+      "(C) training",
+      "(D) education"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "The children sat ______ their grandmother and asked her to tell them stories.",
+    "options": [
+      "(A) a lot",
+      "(B) around",
+      "(C) probably",
+      "(D) above"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Ms. Ruiz will be a little late ______ the rain.",
+    "options": [
+      "(A) in order to",
+      "(B) probably",
+      "(C) around",
+      "(D) because of"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Frank:  Why did Martin get that short haircut? Tony: He ______ in the Army.",
+    "options": [
+      "(A) retired",
+      "(B) promoted",
+      "(C) enlisted",
+      "(D) took"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "I ______ my country.  I was in the military five years.",
+    "options": [
+      "(A) trained",
+      "(B) served",
+      "(C) retired",
+      "(D) working"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "In the U.S., the ______ include the Army, the Navy, the Marine Corps, and the Air Force.",
+    "options": [
+      "(A) armed forces",
+      "(B) military ranks",
+      "(C) assignments",
+      "(D) jobs"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "A silver bar is the ______ for a first lieutenant in the Army.",
+    "options": [
+      "(A) insignia",
+      "(B) ensign",
+      "(C) opportunity",
+      "(D) interest"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Some teenagers prefer _____their friends to calling them on their cell phones.",
+    "options": [
+      "(A) reading",
+      "(B) texting",
+      "(C) checking",
+      "(D) talking"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "If you want to get a job here in this bank, you need to go the ______ office.",
+    "options": [
+      "(A) personnel",
+      "(B) opportunity",
+      "(C) promotion",
+      "(D) duty"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Rex:  Did you see the general when you went to Washington? Roy:  No, I didn't have the ______ to see him.",
+    "options": [
+      "(A) training",
+      "(B) opportunity",
+      "(C) promotion",
+      "(D) location"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "If you're a father, it's your ______ to spend time with your family.",
+    "options": [
+      "(A) assignment",
+      "(B) chance",
+      "(C) duty",
+      "(D) training"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Pete:  What are you going to do after your ______? Henry:  I'm just going to take it easy.",
+    "options": [
+      "(A) retirement",
+      "(B) opportunity",
+      "(C) commander",
+      "(D) major"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I didn't know how to use that weapon until I got some ______.",
+    "options": [
+      "(A) job",
+      "(B) duty",
+      "(C) chance",
+      "(D) training"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Mary:  Have you seen Robert Johnson's latest movie?  Betty:  No, I haven't had a ______ to see it yet.",
+    "options": [
+      "(A) promotion",
+      "(B) duty",
+      "(C) chance",
+      "(D) training"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Lt. Runk:  What will you do after you finish your basic English course? Lt. Choo:  I'1l take an ______ English course.",
+    "options": [
+      "(A) enlisted.",
+      "(B) advanced",
+      "(C) assignment",
+      "(D) same"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Soldier, you ______ to a new post.  Here are your orders.",
+    "options": [
+      "(A) have been transferred",
+      "(B) have been assigned",
+      "(C) have been enlisted",
+      "(D) have been fired"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Your home is called your ______.",
+    "options": [
+      "(A) garden",
+      "(B) basement",
+      "(C) residence",
+      "(D) road"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The test today is ______ the test last week.",
+    "options": [
+      "(A) difficult as",
+      "(B) as difficult as",
+      "(C) slowly as",
+      "(D) as slowly as"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "We use a ______ for keeping dishes.",
+    "options": [
+      "(A) stove",
+      "(B) curtain",
+      "(C) cabinets",
+      "(D) trash can"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "______is your brother?",
+    "options": [
+      "(A) How old",
+      "(B) How much",
+      "(C) How many years",
+      "(D) How much old"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Under is the opposite of ______.",
+    "options": [
+      "(A) below",
+      "(B) over",
+      "(C) high",
+      "(D) front"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The ______ is the top of the house.",
+    "options": [
+      "(A) garage",
+      "(B) fence",
+      "(C) yard",
+      "(D) roof"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "He divided the sandwich ______ two pieces.",
+    "options": [
+      "(A) of",
+      "(B) on",
+      "(C) to",
+      "(D) into"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I'm going to turn on the ______; it's getting hot.",
+    "options": [
+      "(A) fan",
+      "(B) stove",
+      "(C) sink",
+      "(D) TV"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Please don't ______ those dirty clothes on the floor.",
+    "options": [
+      "(A) plug in",
+      "(B) lay",
+      "(C) compare",
+      "(D) love"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "She made new ______ for the window.",
+    "options": [
+      "(A) curtains",
+      "(B) carpet",
+      "(C) car",
+      "(D) book"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "A couch is the same as a______.",
+    "options": [
+      "(A) chair",
+      "(B) shelf",
+      "(C) sofa",
+      "(D) window"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Later, the man stood outside and looked at the round and silver ______.",
+    "options": [
+      "(A) land",
+      "(B) moon",
+      "(C) river",
+      "(D) earth"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The students didn't understand the homework. The teacher must ______ it again.",
+    "options": [
+      "(A) multiply",
+      "(B) divide",
+      "(C) equal",
+      "(D) explain"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "He made some mistakes. He had three ______.",
+    "options": [
+      "(A) errors",
+      "(B) bottoms",
+      "(C) centers",
+      "(D) halves"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Six ______ five is 30.",
+    "options": [
+      "(A) subtract",
+      "(B) times",
+      "(C) plus",
+      "(D) divided by"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The student from Zaire will ______ his country to the class.",
+    "options": [
+      "(A) compare",
+      "(B) change",
+      "(C) draw",
+      "(D) describe"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Get on is the ______ of get off.",
+    "options": [
+      "(A) mistake",
+      "(B) other",
+      "(C) alike",
+      "(D) opposite"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "The old city has very ______ streets.",
+    "options": [
+      "(A) narrow",
+      "(B) strong",
+      "(C) square",
+      "(D) opposite"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "In two hours I did only two problems. The problems were very ______.",
+    "options": [
+      "(A) difficult",
+      "(B) healthy",
+      "(C) exciting",
+      "(D) sad"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Mary called you. I left the ______ on the table.",
+    "options": [
+      "(A) moment",
+      "(B) message",
+      "(C) manager",
+      "(D) mail box"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Vic: You were in the Air Force.  Where did you have your ______ training?  Dan: At Lackland Air Force Base in San Antonio.",
+    "options": [
+      "(A) basic",
+      "(B) retired",
+      "(C) enlisted",
+      "(D) beautiful"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Jim: Can we get an apartment here? Hal: No, there are none ______.",
+    "options": [
+      "(A) for rent",
+      "(B) held on",
+      "(C) looked for",
+      "(D) of spend"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "They make refrigerators in that ______.",
+    "options": [
+      "(A) factory",
+      "(B) direction",
+      "(C) way",
+      "(D) road"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "He put a quarter in the ______ and dialed the number.",
+    "options": [
+      "(A) change",
+      "(B) coin",
+      "(C) home",
+      "(D) slot"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I like this apartment. How much is the ______?",
+    "options": [
+      "(A) manager",
+      "(B) deposit",
+      "(C) bedroom",
+      "(D) network"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Some ______ show both Fahrenheit and Celsius.",
+    "options": [
+      "(A) temperatures",
+      "(B) thermometers",
+      "(C) directions",
+      "(D) stethoscope"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The big jet ______ ten minutes ago.",
+    "options": [
+      "(A) took on",
+      "(B) turned on",
+      "(C) turned off",
+      "(D) took off"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "______ is under the box? A book is under the box.",
+    "options": [
+      "(A) Where",
+      "(B) What",
+      "(C) Whose",
+      "(D) Who"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "______ is the dispensary? It's on the base.",
+    "options": [
+      "(A) Where",
+      "(B) What",
+      "(C) Whose",
+      "(D) Who"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "What's in the ______? Books.",
+    "options": [
+      "(A) hospital",
+      "(B) library",
+      "(C) mess hall",
+      "(D) BX"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Where is the ______ stop? It's on the base.",
+    "options": [
+      "(A) bus",
+      "(B) book",
+      "(C) chair",
+      "(D) desk"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Where is the ______? It's on Building 1000.",
+    "options": [
+      "(A) Air Force",
+      "(B) BX",
+      "(C) base",
+      "(D) books"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Where is ______ room? Their room is in the barracks.",
+    "options": [
+      "(A) your",
+      "(B) their",
+      "(C) our",
+      "(D) my"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Pork, beef and ______ are meat.",
+    "options": [
+      "(A) fish",
+      "(B) cherry",
+      "(C) rice",
+      "(D) noodles"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "A: What would you like for ______? B: Apple pie, please.",
+    "options": [
+      "(A) soup",
+      "(B) drinks",
+      "(C) dessert",
+      "(D) candy"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Mr. Brown is Mary's father. Mary is his ______.",
+    "options": [
+      "(A) cousin",
+      "(B) daughter",
+      "(C) wife",
+      "(D) mother"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "There are seven days in a ______.",
+    "options": [
+      "(A) hour",
+      "(B) year",
+      "(C) day",
+      "(D) week"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "A year has twelve ______.",
+    "options": [
+      "(A) weeks",
+      "(B) months",
+      "(C) hours",
+      "(D) minutes"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "John didn't go to school today. He was ______.",
+    "options": [
+      "(A) sick",
+      "(B) upset",
+      "(C) cold",
+      "(D) happy"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Bob: This is my friend John. Ted:______.",
+    "options": [
+      "(A) Glad to meet you",
+      "(B) Fine, thanks",
+      "(C) See you later",
+      "(D) Goodbye"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "John is a pilot. Bob is a pilot, ______.",
+    "options": [
+      "(A) and",
+      "(B) or",
+      "(C) too",
+      "(D) either"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "It is ______ in summer.",
+    "options": [
+      "(A) warm",
+      "(B) cold",
+      "(C) cool",
+      "(D) hot"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "You have to buy a ______ before entering the theater.",
+    "options": [
+      "(A) paper",
+      "(B) flowers",
+      "(C) ticket",
+      "(D) map"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Mrs. Wilson is Mr. Wilson's ______.",
+    "options": [
+      "(A) wife",
+      "(B) sister",
+      "(C) daughter",
+      "(D) friend"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Is that the right answer? Yes, it's ______.",
+    "options": [
+      "(A) correct",
+      "(B) wrong",
+      "(C) difficult",
+      "(D) nice"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "It's time for lunch. Let's go to the ______.",
+    "options": [
+      "(A) garage",
+      "(B) snack bar",
+      "(C) library",
+      "(D) meeting room"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Tom: Thank you. Bob: ______.",
+    "options": [
+      "(A) Good",
+      "(B) Me, too",
+      "(C) You're welcome",
+      "(D) Fine, thanks"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Ted: I'm tired. Bob: ______.",
+    "options": [
+      "(A) Me, too",
+      "(B) You're welcome",
+      "(C) See you later",
+      "(D) Good night"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Mark ______ his money in the Central Bank.",
+    "options": [
+      "(A) complete",
+      "(B) deposit",
+      "(C) fill out",
+      "(D) spend"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Please ______ this form first, please.",
+    "options": [
+      "(A) spend",
+      "(B) deposit",
+      "(C) fill out",
+      "(D) put"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "We ______ our assignment in 10 minutes.",
+    "options": [
+      "(A) finish",
+      "(B) see",
+      "(C) feel",
+      "(D) look"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "After a fifty-minute class, we take a ten-minute ______.",
+    "options": [
+      "(A) smoke",
+      "(B) on time",
+      "(C) break",
+      "(D) in time"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Dirty socks ______ bad.",
+    "options": [
+      "(A) smell",
+      "(B) sound",
+      "(C) taste",
+      "(D) hear"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "These apples ______ very sweet.",
+    "options": [
+      "(A) fell",
+      "(B) sound",
+      "(C) taste",
+      "(D) smell"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "He ______ awful. He must be sick.",
+    "options": [
+      "(A) looks",
+      "(B) smells",
+      "(C) tastes",
+      "(D) taste"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Mother put the food in the ______ so that she can keep it for a long time.",
+    "options": [
+      "(A) television set",
+      "(B) cupboard",
+      "(C) refrigerator",
+      "(D) room"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "We see a movie at a movie ______.",
+    "options": [
+      "(A) space",
+      "(B) market",
+      "(C) theater",
+      "(D) restaurant"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The dog is really dirty. Please ______ him today.",
+    "options": [
+      "(A) bathe",
+      "(B) worry",
+      "(C) spill",
+      "(D) look"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "We'll have to wait a few minutes for Bill. He isn't ______.",
+    "options": [
+      "(A) soft",
+      "(B) almost",
+      "(C) ready",
+      "(D) good"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "I paid the ______, but the clerk forgot to give me the books I bought.",
+    "options": [
+      "(A) tank",
+      "(B) motel",
+      "(C) bill",
+      "(D) bank"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Mark: Do you write your left hand? Bob: No, I write with my ______ hand.",
+    "options": [
+      "(A) correct",
+      "(B) right",
+      "(C) wrong",
+      "(D) bad"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Don't ______ the cup! It's very hot.",
+    "options": [
+      "(A) hurt",
+      "(B) touch",
+      "(C) point to",
+      "(D) pull"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Today is a beautiful day! It's the first day ______ spring.",
+    "options": [
+      "(A) of",
+      "(B) then",
+      "(C) about",
+      "(D) at"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I hear the music. Who ______ the radio?",
+    "options": [
+      "(A) turned",
+      "(B) on",
+      "(C) turned on",
+      "(D) turned off"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The students ______ their pencils early in the morning.",
+    "options": [
+      "(A) sharpen",
+      "(B) park",
+      "(C) turn off",
+      "(D) push"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "______ arm did you hurt?",
+    "options": [
+      "(A) When",
+      "(B) Which",
+      "(C) Where",
+      "(D) Who"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Ken's hair is very long. He needs a ______.",
+    "options": [
+      "(A) haircut",
+      "(B) shampoo",
+      "(C) grocery store",
+      "(D) soap"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I like to put ______ in my soup.",
+    "options": [
+      "(A) pocket",
+      "(B) shampoo",
+      "(C) pepper",
+      "(D) soap"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "You can buy rice and sugar at a ______.",
+    "options": [
+      "(A) grocery store",
+      "(B) drugstore",
+      "(C) barbershop",
+      "(D) dispensary"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "______ your hands with clean water.",
+    "options": [
+      "(A) Rinse",
+      "(B) Dry",
+      "(C) Change",
+      "(D) Get"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "My lessons end on Tuesday. My ______ will be on Friday.",
+    "options": [
+      "(A) reservation",
+      "(B) doorknob",
+      "(C) graduation",
+      "(D) ticket"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Our teacher told us a ______ story.",
+    "options": [
+      "(A) interest",
+      "(B) fully",
+      "(C) fascinating",
+      "(D) fascinate"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Do you want cake or ice cream for ______?",
+    "options": [
+      "(A) dessert",
+      "(B) dial",
+      "(C) cookie'",
+      "(D) dozen"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Corn, potatoes and green beans are ______.",
+    "options": [
+      "(A) fruits",
+      "(B) dessert",
+      "(C) sandwiches",
+      "(D) vegetables"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I studied for the test. I think I'll get a good ______.",
+    "options": [
+      "(A) test",
+      "(B) score",
+      "(C) booklet",
+      "(D) moment"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The sky was clear. There weren't any ______.",
+    "options": [
+      "(A) suns",
+      "(B) clouds",
+      "(C) snow",
+      "(D) rains"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "I bought a ______ at the bank.",
+    "options": [
+      "(A) driver's license",
+      "(B) package",
+      "(C) money order",
+      "(D) post card"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "______ your name on the traveler's check, please.",
+    "options": [
+      "(A) Give",
+      "(B) Mail",
+      "(C) Sign",
+      "(D) Send"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "How long ____ you had this cold?",
+    "options": [
+      "(A) had",
+      "(B) has",
+      "(C) having",
+      "(D) have"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "We're tired. We want to ______.",
+    "options": [
+      "(A) take a rest",
+      "(B) take medicine",
+      "(C) take a trip",
+      "(D) take pictures"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "There was a ______ this morning. It rained only ten minutes.",
+    "options": [
+      "(A) snow",
+      "(B) weather",
+      "(C) shower",
+      "(D) clouds"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The sun is shining. It's ______ outside.",
+    "options": [
+      "(A) cloudy",
+      "(B) cold",
+      "(C) rainy",
+      "(D) sunny"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "A knife has a handle and a ______.",
+    "options": [
+      "(A) boat",
+      "(B) blade",
+      "(C) napkins",
+      "(D) wood"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "My brother is a pilot. He flies a ______.",
+    "options": [
+      "(A) boat",
+      "(B) helicopter",
+      "(C) vehicle",
+      "(D) car"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "It's time to go to class. Did you ______ your breakfast?",
+    "options": [
+      "(A) finish",
+      "(B) show",
+      "(C) sign",
+      "(D) give"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "The ______ on his uniform are for his rank.",
+    "options": [
+      "(A) stripes",
+      "(B) name tags",
+      "(C) caps",
+      "(D) style"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "John shaved with a new ______.",
+    "options": [
+      "(A) cut",
+      "(B) name tag",
+      "(C) rank",
+      "(D) razor"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I bought my coat at a ______ downtown.",
+    "options": [
+      "(A) store",
+      "(B) dance",
+      "(C) school",
+      "(D) restaurant"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "In the spring, it's not very hot. It is ______.",
+    "options": [
+      "(A) cool",
+      "(B) hot",
+      "(C) cold",
+      "(D) warm"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I don't want to listen to your music. Please put on your ______.",
+    "options": [
+      "(A) radio",
+      "(B) recorder",
+      "(C) headset",
+      "(D) TV"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The game ______at 7:00 p.m. and ended at 10:00.",
+    "options": [
+      "(A) cleaned",
+      "(B) started",
+      "(C) leaved",
+      "(D) starting"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Don't keep your money in your room. It's not ______.",
+    "options": [
+      "(A) quiet",
+      "(B) dangerous",
+      "(C) safe",
+      "(D) excited"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Don't be late. Come to class ______.",
+    "options": [
+      "(A) take a break",
+      "(B) true",
+      "(C) on time",
+      "(D) now"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "______ does this pen cost?",
+    "options": [
+      "(A) How many",
+      "(B) How much",
+      "(C) Is",
+      "(D) Are"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Winter, spring, summer, and fall are ______.",
+    "options": [
+      "(A) seasons",
+      "(B) sports",
+      "(C) stores",
+      "(D) story"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I want to drink water. I'm ______.",
+    "options": [
+      "(A) thirsty",
+      "(B) early",
+      "(C) hungry",
+      "(D) sad"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "A: Where is your hat? B: ______.",
+    "options": [
+      "(A) Good for you",
+      "(B) Here is it",
+      "(C) There is it",
+      "(D) Here it is"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "The children eat lunch ______ noon.",
+    "options": [
+      "(A) on",
+      "(B) at",
+      "(C) in",
+      "(D) of"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Al wants to leave his country ______March.",
+    "options": [
+      "(A) in",
+      "(B) at",
+      "(C) on",
+      "(D) of"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Tim is in the Army. He's ______.",
+    "options": [
+      "(A) a soldier",
+      "(B) an airman",
+      "(C) sailor",
+      "(D) a good man"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "When does the plane ______?",
+    "options": [
+      "(A) drive",
+      "(B) take",
+      "(C) leave",
+      "(D) go"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "______do the students swim? They swim every day.",
+    "options": [
+      "(A) Sometimes",
+      "(B) How many",
+      "(C) How large",
+      "(D) How often"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "______ wants coffee ?",
+    "options": [
+      "(A) Who",
+      "(B) What",
+      "(C) How often",
+      "(D) How many"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Let's go to the BX. ______, let's go now.",
+    "options": [
+      "(A) All right",
+      "(B) Never",
+      "(C) When",
+      "(D) Where"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "This month is March. Next month is ______.",
+    "options": [
+      "(A) May",
+      "(B) June",
+      "(C) April",
+      "(D) July"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "What languages do you ______?",
+    "options": [
+      "(A) speak",
+      "(B) has",
+      "(C) learning",
+      "(D) see"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "They swim ______ Wednesdays.",
+    "options": [
+      "(A) of",
+      "(B) on",
+      "(C) in",
+      "(D) at"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "When do you want to leave? I want to leave ______.",
+    "options": [
+      "(A) all right",
+      "(B) on a train",
+      "(C) right now",
+      "(D) after"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Do you drive to the base? No, I ______ a bus.",
+    "options": [
+      "(A) take",
+      "(B) walk",
+      "(C) do",
+      "(D) did"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "He's from Egypt. ______ are you from?",
+    "options": [
+      "(A) What",
+      "(B) There",
+      "(C) Where",
+      "(D) Who"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "The secretary deals ______ the business correspondence for the company.",
+    "options": [
+      "(A) in",
+      "(B) with",
+      "(C) on",
+      "(D) for"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Her brother works ______ a war correspondent.",
+    "options": [
+      "(A) as",
+      "(B) on",
+      "(C) for",
+      "(D) in"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "The company is so successful ______ it now employs more than 1000 workers.",
+    "options": [
+      "(A) so",
+      "(B) that",
+      "(C) and",
+      "(D) when"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "There are ______ 60 students in the classroom.",
+    "options": [
+      "(A) near",
+      "(B) nearing",
+      "(C) nearly",
+      "(D) neared"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "My sister is good ______ swimming.",
+    "options": [
+      "(A) for",
+      "(B) at",
+      "(C) in",
+      "(D) by"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "It's too cold. I need a shirt with long ______.",
+    "options": [
+      "(A) zippers",
+      "(B) lets",
+      "(C) buttons",
+      "(D) sleeves"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I bought this cup, and I'll buy that one ______.",
+    "options": [
+      "(A) as well",
+      "(B) either",
+      "(C) and also",
+      "(D) neither"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "I will probably stay at home if it ______ on Sunday.",
+    "options": [
+      "(A) rains",
+      "(B) will rain",
+      "(C) rain",
+      "(D) rained"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Helen came to Taiwan ______ business.",
+    "options": [
+      "(A) in",
+      "(B) on",
+      "(C) by",
+      "(D) from"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "______ was your trip to Japan, Peter?",
+    "options": [
+      "(A) Where",
+      "(B) What",
+      "(C) How",
+      "(D) Who"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "I've heard so ______ nice things about you.",
+    "options": [
+      "(A) many",
+      "(B) much",
+      "(C) little",
+      "(D) lot"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "Joe is ______ older than Lucy.",
+    "options": [
+      "(A) very",
+      "(B) much",
+      "(C) much more",
+      "(D) more"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "You are younger than he said you ______.",
+    "options": [
+      "(A) was",
+      "(B) do",
+      "(C) were",
+      "(D) did"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "When ______ an informal introduction, first names are usually used.",
+    "options": [
+      "(A) make",
+      "(B) made",
+      "(C) we making",
+      "(D) making"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "I am ______ to meet you, Miss Chen.",
+    "options": [
+      "(A) happily",
+      "(B) happy",
+      "(C) happiness",
+      "(D) please"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The box ______ in a window with a candle inside.",
+    "options": [
+      "(A) were put",
+      "(B) were set",
+      "(C) was set",
+      "(D) put"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "This is the ______ story that I have ever heard.",
+    "options": [
+      "(A) scary",
+      "(B) scarier",
+      "(C) scariest",
+      "(D) scaring"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "Our ______ neighbors gave us lots of books.",
+    "options": [
+      "(A) friend",
+      "(B) friendly",
+      "(C) friendship",
+      "(D) friends"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "His new car is similar ______ yours.",
+    "options": [
+      "(A) at",
+      "(B) in",
+      "(C) of",
+      "(D) to"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "We put a tray of cookies outside our door and the next morning they were all ______.",
+    "options": [
+      "(A) going",
+      "(B) gone",
+      "(C) go",
+      "(D) goes"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "Halloween is ______ October 31.",
+    "options": [
+      "(A) on",
+      "(B) in",
+      "(C) at",
+      "(D) for"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "______ would be a lot of apples and candy.",
+    "options": [
+      "(A) There",
+      "(B) This",
+      "(C) It",
+      "(D) That"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "It is said that the house is filled ______ evil spirits.",
+    "options": [
+      "(A) of",
+      "(B) by",
+      "(C) with",
+      "(D) to"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "It is ______ for Chinese children to wear new clothes on Chinese New Year's Day.",
+    "options": [
+      "(A) custom",
+      "(B) customary",
+      "(C) spirit",
+      "(D) spiritual"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "The Pope got down ______ his knees and kissed the ground.",
+    "options": [
+      "(A) to",
+      "(B) by",
+      "(C) on",
+      "(D) from"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "______ Michael looks tired; he stayed up all night.",
+    "options": [
+      "(A) There is wonder",
+      "(B) It's no wonder",
+      "(C) It's the reason for",
+      "(D) This is reasonable"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "What do you say ______ a visit to the Palace Museum?",
+    "options": [
+      "(A) having",
+      "(B) to pay",
+      "(C) paying",
+      "(D) to paying"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "______ you have to do is sit down and stay calm.",
+    "options": [
+      "(A) All",
+      "(B) Only",
+      "(C) How",
+      "(D) Which"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "He saw a girl ______ in blue.",
+    "options": [
+      "(A) being dressed",
+      "(B) dressing",
+      "(C) dressed",
+      "(D) dressed herself"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "There is no mother but ______ her children.",
+    "options": [
+      "(A) loves",
+      "(B) love",
+      "(C) loving",
+      "(D) loved"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "It is necessary ______ the traffic rules.",
+    "options": [
+      "(A) you following",
+      "(B) your following",
+      "(C) of you to follow",
+      "(D) for you to follow"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Please lock the door when you ______.",
+    "options": [
+      "(A) leave",
+      "(B) will be leaving",
+      "(C) will have left",
+      "(D) will leave"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "She has to study ______ two years before she graduates.",
+    "options": [
+      "(A) more",
+      "(B) another",
+      "(C) other",
+      "(D) much"
+    ],
+    "ans": "B"
+  },
+  {
+    "q": "My father objected to ______ like an invalid.",
+    "options": [
+      "(A) treat",
+      "(B) treating",
+      "(C) be treated",
+      "(D) being treated"
+    ],
+    "ans": "D"
+  },
+  {
+    "q": "Nancy studied hard ______ flunk calculus again.",
+    "options": [
+      "(A) so as not to",
+      "(B) not so as to",
+      "(C) so as to",
+      "(D) as not to"
+    ],
+    "ans": "A"
+  },
+  {
+    "q": "We considered ______ but finally decided against it.",
+    "options": [
+      "(A) go",
+      "(B) to go",
+      "(C) going",
+      "(D) about to go"
+    ],
+    "ans": "C"
+  },
+  {
+    "q": "This car needs ______.",
+    "options": [
+      "(A) being repaired",
+      "(B) to repair",
+      "(C) repairing",
+      "(D) having repaired"
+    ],
+    "ans": "C"
+  }
+]
