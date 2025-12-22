@@ -16,6 +16,8 @@
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* 練習模式下，作答後滑鼠變更為指針，提示可點擊下一頁 */
+        .cursor-next { cursor: pointer; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -81,7 +83,7 @@
             </div>
         </div>
 
-        <div id="practice-mode-view" class="hidden max-w-2xl mx-auto mt-4">
+        <div id="practice-mode-view" class="hidden max-w-2xl mx-auto mt-4 transition-colors duration-300">
             <div class="flex justify-between items-end mb-4 px-2">
                 <span id="practice-progress" class="text-gray-500 font-medium"></span>
                 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">練習模式</span>
@@ -93,6 +95,9 @@
                 </div>
                 
                 <div id="practice-feedback" class="hidden mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 animate-pulse-once"></div>
+            </div>
+            <div class="mt-6 text-center text-sm text-gray-400 animate-pulse hidden" id="practice-hint">
+                (按任意空白處或 Space 鍵進入下一題)
             </div>
             <div class="mt-6 text-right">
                 <button id="btn-practice-next" onclick="nextPracticeQuestion()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition">下一題 &rarr;</button>
@@ -136,6 +141,29 @@
         let currentQIndex = 0;
         let timerInterval;
 
+        // --- 初始化監聽器 (練習模式快速切換) ---
+        // 1. 鍵盤空白鍵監聽
+        document.addEventListener('keydown', function(e) {
+            // 只有在練習模式、下一題按鈕已顯示、且按下空白鍵時觸發
+            const nextBtn = document.getElementById('btn-practice-next');
+            if (currentMode === 'practice' && 
+                !nextBtn.classList.contains('hidden') && 
+                e.code === 'Space') {
+                e.preventDefault(); // 防止頁面滾動
+                nextPracticeQuestion();
+            }
+        });
+
+        // 2. 空白處點擊監聽 (委派給 practice-mode-view)
+        document.getElementById('practice-mode-view').addEventListener('click', function(e) {
+            const nextBtn = document.getElementById('btn-practice-next');
+            // 如果已作答 (下一題按鈕顯示) 且 點擊的目標不是下一題按鈕本身
+            if (!nextBtn.classList.contains('hidden') && e.target.id !== 'btn-practice-next') {
+                nextPracticeQuestion();
+            }
+        });
+
+
         // --- 核心功能 1: 讀取題庫 (AJAX) ---
         async function prepareExam(mode) {
             const subjectCode = document.getElementById('subject-select').value;
@@ -161,7 +189,6 @@
                 }
 
                 // 隨機選題
-                // 如果要求的題數大於總題數，就取所有題目
                 const actualCount = Math.min(qCount, allQuestions.length);
                 currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, actualCount);
                 
@@ -200,7 +227,6 @@
                     </div>
                     <div class="space-y-2 pl-2">
                         ${q.options.map((opt, i) => {
-                            // 移除選項文字開頭可能重複的 (A) (B)... 讓顯示更乾淨，或者保留
                             const val = ["A","B","C","D"][i];
                             return `
                             <label class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer group">
@@ -232,16 +258,19 @@
             });
             
             let score = Math.round(correct * (100 / currentQuestions.length));
-            // 修正數學誤差
             if(correct === currentQuestions.length) score = 100;
 
             saveLog(score);
             
+            // --- [修改] 顯示格式為「測 X 題 對 Y 題」 ---
             Swal.fire({ 
                 title: '測驗結果', 
                 html: `
                     <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
-                    <div class="text-gray-500">答對 ${correct} / ${currentQuestions.length} 題</div>
+                    <div class="text-lg text-gray-700 font-medium space-y-1">
+                        <div>共測驗 <b class="text-gray-900 text-xl">${currentQuestions.length}</b> 題</div>
+                        <div>答對 <b class="text-green-600 text-xl">${correct}</b> 題</div>
+                    </div>
                 `, 
                 icon: score >= 60 ? 'success' : 'warning',
                 confirmButtonText: '確定'
@@ -260,29 +289,37 @@
             const q = currentQuestions[currentQIndex];
             document.getElementById('practice-progress').innerText = `題目 ${currentQIndex+1} / ${currentQuestions.length}`;
             document.getElementById('practice-q-text').innerText = q.q;
+            document.getElementById('practice-mode-view').classList.remove('cursor-next'); // 移除可點擊游標
             
             const optsDiv = document.getElementById('practice-options');
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
             document.getElementById('btn-practice-next').classList.add('hidden');
+            document.getElementById('practice-hint').classList.add('hidden');
 
             q.options.forEach((opt, i) => {
                 const val = ["A","B","C","D"][i];
                 const btn = document.createElement('div');
                 btn.className = "option-card bg-gray-50 p-4 rounded-xl flex items-center text-gray-700 font-medium";
                 btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm">${val}</span>${opt}`;
-                btn.onclick = () => checkPractice(btn, val, q.ans);
+                // --- [修改] 傳入 event 參數以停止冒泡 ---
+                btn.onclick = (e) => checkPractice(e, btn, val, q.ans);
                 optsDiv.appendChild(btn);
             });
         }
 
-        function checkPractice(el, userAns, correctAns) {
+        function checkPractice(event, el, userAns, correctAns) {
+            // --- [關鍵修改] 停止事件冒泡，防止點擊選項時直接觸發「點擊空白下一題」 ---
+            event.stopPropagation();
+
             // 鎖定所有選項
             document.querySelectorAll('.option-card').forEach(d => d.onclick = null);
             
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             document.getElementById('btn-practice-next').classList.remove('hidden');
+            document.getElementById('practice-hint').classList.remove('hidden');
+            document.getElementById('practice-mode-view').classList.add('cursor-next'); // 增加可點擊提示
 
             if(userAns === correctAns) {
                 el.classList.add('correct');
@@ -350,28 +387,4 @@
 
         function showLogs() {
             const logs = JSON.parse(localStorage.getItem('gh_exam_logs_v2') || '[]');
-            const tbody = document.getElementById('admin-log-body');
-            if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
-            } else {
-                tbody.innerHTML = logs.map(l => `
-                    <tr class="hover:bg-gray-50 transition border-b last:border-0">
-                        <td class="p-4 text-gray-600">${l.date}</td>
-                        <td class="p-4 font-mono text-xs text-gray-400">${l.ip}</td>
-                        <td class="p-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${l.subject}</span></td>
-                        <td class="p-4 font-bold ${l.score>=60?'text-green-600':'text-red-600'}">${l.score}</td>
-                    </tr>
-                `).join('');
-            }
-            document.getElementById('admin-modal').classList.remove('hidden');
-        }
-
-        function clearLogs() {
-            if(confirm('確定要清空所有考試紀錄嗎？')) { 
-                localStorage.removeItem('gh_exam_logs_v2'); 
-                showLogs(); 
-            }
-        }
-    </script>
-</body>
-</html>
+            const tbody = document.getElementById('admin-log-b
