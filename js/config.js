@@ -15,8 +15,8 @@ const FORM_IDS = {
 
 // --- 全域變數 (Shared State) ---
 let currentQuestions = [];
-let currentSubjectName = "國文"; 
-let currentSubjectCode = "chinese";
+let currentSubjectName = ""; 
+let currentSubjectCode = ""; // 移除預設值
 let currentMode = "";
 let isRetryMode = false;
 let userIP = "Loading...";
@@ -49,3 +49,4 @@ function saveLog(modeStr, resultStr) {
         fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData }).catch(console.error);
     }
 }
+

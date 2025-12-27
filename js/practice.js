@@ -4,13 +4,21 @@ let practiceCorrectCount = 0;
 // --- 錯題複習入口 ---
 function startRetryMode() {
     const subjectCode = document.getElementById('subject-select').value;
+    
+    if (!subjectCode) {
+        Swal.fire('請先選擇科目', '', 'warning');
+        return;
+    }
+
     const cards = document.querySelectorAll('.subject-card');
     cards.forEach(c => {
         if(c.classList.contains('active')) currentSubjectName = c.innerText;
     });
 
     const wrongDB = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
-    const wrongList = wrongDB[subjectCode] || [];
+    // 如果是混合模式，這裡可能讀取不到，暫時只支援單科複習，或是需另外實作混合錯題邏輯
+    // 簡單處理：混合模式時嘗試讀取 "mix_mil_pol" (如果有存) 或者提示不支援
+    let wrongList = wrongDB[subjectCode] || [];
 
     if (wrongList.length === 0) {
         Swal.fire('太棒了', '此科目目前沒有紀錄錯誤題目！', 'info');
@@ -43,7 +51,9 @@ function renderPracticeQ() {
     
     const optsDiv = document.getElementById('practice-options');
     optsDiv.innerHTML = '';
+    
     document.getElementById('practice-feedback').classList.add('hidden');
+    document.getElementById('practice-hint-text').classList.add('hidden');
 
     q.options.forEach((opt, i) => {
         const val = ["A","B","C","D"][i];
@@ -56,27 +66,52 @@ function renderPracticeQ() {
 }
 
 function checkPractice(el, userAns, correctAns, questionObj) {
+    // 鎖定所有按鈕防止連點
     document.querySelectorAll('.option-card').forEach(d => d.onclick = null);
+    
     const feedback = document.getElementById('practice-feedback');
+    const hint = document.getElementById('practice-hint-text');
     feedback.classList.remove('hidden');
     
     if(userAns === correctAns) {
+        // --- 答對：0.25秒後自動換題 ---
         practiceCorrectCount++;
         el.classList.add('correct');
         feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold">回答正確！</div>`;
         if(isRetryMode) removeWrongQuestion(currentSubjectCode, questionObj);
+        
+        setTimeout(() => { nextPracticeQuestion(); }, 250);
+
     } else {
+        // --- 答錯：顯示錯誤，並開啟全螢幕點擊監聽 ---
         el.classList.add('wrong');
         feedback.innerHTML = `
             <div class="text-red-600 font-bold mb-1">回答錯誤</div>
             <div class="text-gray-600">正確答案是：<b class="text-green-600 text-lg">${correctAns}</b></div>
         `;
+        
+        // 標示正確選項
         const correctIdx = ["A","B","C","D"].indexOf(correctAns);
         if (correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
+        
         saveWrongQuestion(currentSubjectCode, questionObj);
-    }
+        
+        // 顯示提示文字
+        hint.classList.remove('hidden');
 
-    setTimeout(() => { nextPracticeQuestion(); }, 250);
+        // 啟用遮罩與點擊事件
+        const overlay = document.getElementById('click-overlay');
+        overlay.classList.remove('hidden');
+        
+        // 定義一次性點擊處理器
+        const clickHandler = () => {
+            overlay.classList.add('hidden'); // 隱藏遮罩
+            overlay.removeEventListener('click', clickHandler); // 移除監聽
+            nextPracticeQuestion(); // 下一題
+        };
+        
+        overlay.addEventListener('click', clickHandler);
+    }
 }
 
 function nextPracticeQuestion() {
@@ -110,3 +145,4 @@ function removeWrongQuestion(subjectCode, qObj) {
         localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
     }
 }
+
