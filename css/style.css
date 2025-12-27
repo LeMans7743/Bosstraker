@@ -1,0 +1,32 @@
+body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; user-select: none; }
+.hidden { display: none; }
+
+/* 選項卡片 */
+.option-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+.option-card:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+.correct { background-color: #dcfce7 !important; border-color: #16a34a !important; color: #166534; }
+.wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b; }
+
+/* 科目選擇卡片 */
+.subject-card {
+    cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
+    text-align: center; transition: all 0.2s; background: white;
+    font-weight: bold; color: #64748b;
+}
+.subject-card:hover { border-color: #93c5fd; }
+.subject-card.active { 
+    border-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; 
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); 
+}
+
+/* 紀錄頁籤 & 按鈕 */
+.tab-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #64748b; }
+.tab-btn:hover { background-color: #f1f5f9; }
+.tab-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+.mode-switch-btn { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #94a3b8; }
+.mode-switch-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+
+/* 載入動畫 */
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
