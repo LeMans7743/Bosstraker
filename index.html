@@ -18,7 +18,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 全螢幕點擊層 (練習模式答錯時用) */
+        /* 全螢幕點擊層 (練習模式-答錯時用) */
         #next-trigger-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 100; cursor: pointer;
@@ -54,12 +54,12 @@
                 <div>
                     <label class="block text-gray-700 font-bold mb-2">選擇科目</label>
                     <select id="subject-select" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 transition">
-                        <option value="" disabled selected>-- 請選擇科目 --</option>
+                        <option value="" disabled selected>請選擇科目...</option>
                         <option value="chinese">國文</option>
                         <option value="english">英文</option>
                         <option value="politics">政治</option>
                         <option value="military">軍事</option>
-                        <option value="combined_mil_pol" class="font-bold text-blue-600">軍事 & 政治 (混合)</option>
+                        <option value="mix_mil_pol" class="font-bold text-blue-700">★ 軍事 & 政治 (綜合題庫)</option>
                     </select>
                 </div>
                 <div>
@@ -70,7 +70,7 @@
 
             <div id="loading-spinner" class="hidden text-center py-4">
                 <div class="loader"></div>
-                <p class="text-gray-500 animate-pulse">正在讀取題庫...</p>
+                <p class="text-gray-500 animate-pulse">正在從題庫讀取資料中...</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="action-buttons">
@@ -102,13 +102,20 @@
                 </div>
             </div>
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
-            
-            <div id="exam-submit-area" class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
+            <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
                 <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">交卷並計算分數</button>
             </div>
+        </div>
 
-            <div id="exam-review-area" class="hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
-                <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">結束檢討 / 回首頁</button>
+        <div id="exam-review-view" class="hidden">
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 text-center">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">測驗結果檢討</h2>
+                <div id="review-score-display" class="text-4xl font-bold text-blue-600 mb-4"></div>
+                <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition">結束並回首頁</button>
+            </div>
+            <div class="space-y-6" id="review-list"></div>
+            <div class="text-center mt-8 pb-12">
+                <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition">結束檢討</button>
             </div>
         </div>
 
@@ -129,7 +136,7 @@
 
         <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
             <div class="tap-hint-box">
-                <span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span>
+                <span class="tap-hint-text">點擊螢幕任意處查看下一題 ▼</span>
             </div>
         </div>
 
@@ -148,6 +155,7 @@
                 <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <div class="overflow-auto flex-grow p-4">
+                <p class="text-xs text-gray-500 mb-4 text-center">這裡只顯示您目前使用這台裝置的紀錄</p>
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-100 text-gray-600">
                         <tr>
@@ -196,7 +204,7 @@
 
     <script>
         // ==========================================
-        //  【雲端資料庫設定區】
+        //  【雲端資料庫設定區 - 維持您的設定】
         // ==========================================
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScqZn3A4HLzNL-a8_u2Y_jCYqiEnQy6Vn5Tv2Y8STrod4u9gw/formResponse";
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ28Z7fBJziaSJ5EQVCAlK_AVz8zM4KQL-8kCmiPGqjlpxuSw3pGKY0ZuVi5AHfV3WnlQzhI998yDuN/pub?output=csv";
@@ -229,14 +237,14 @@
             .then(data => userIP = data.ip)
             .catch(e => userIP = "無法取得 IP");
 
-        // --- 核心功能 1: 讀取題庫 ---
+        // --- 核心功能 1: 讀取題庫 (新增綜合題庫邏輯) ---
         async function prepareExam(mode) {
             const subjectSelect = document.getElementById('subject-select');
             const subjectCode = subjectSelect.value;
             
-            // 需求2: 檢查是否已選擇科目
+            // 檢查是否選擇了科目
             if (!subjectCode) {
-                Swal.fire('請選擇科目', '請先在下拉選單中選擇一個科目', 'warning');
+                Swal.fire('請選擇科目', '請先在選單中選擇一個測驗科目', 'warning');
                 return;
             }
 
@@ -249,22 +257,23 @@
             try {
                 let allQuestions = [];
 
-                // 需求3: 混合題庫邏輯
-                if (subjectCode === 'combined_mil_pol') {
+                // 判斷是否為綜合題庫
+                if (subjectCode === 'mix_mil_pol') {
                     // 同時讀取兩個檔案
-                    const [resMil, resPol] = await Promise.all([
-                        fetch('questions/military.json'),
-                        fetch('questions/politics.json')
+                    const [res1, res2] = await Promise.all([
+                        fetch('questions/politics.json'),
+                        fetch('questions/military.json')
                     ]);
                     
-                    if(!resMil.ok || !resPol.ok) throw new Error("讀取混合題庫失敗，請確認 military.json 與 politics.json 皆存在");
-
-                    const dataMil = await resMil.json();
-                    const dataPol = await resPol.json();
-                    allQuestions = [...dataMil, ...dataPol]; // 合併陣列
-
+                    if (!res1.ok || !res2.ok) throw new Error("讀取政治或軍事題庫失敗");
+                    
+                    const data1 = await res1.json();
+                    const data2 = await res2.json();
+                    
+                    // 合併陣列
+                    allQuestions = [...data1, ...data2];
                 } else {
-                    // 單一題庫邏輯
+                    // 一般單科讀取
                     const response = await fetch(`questions/${subjectCode}.json`);
                     if (!response.ok) throw new Error(`Error ${response.status}`);
                     allQuestions = await response.json();
@@ -287,7 +296,7 @@
                 console.error(error);
                 Swal.fire({
                     title: '讀取失敗', 
-                    html: `無法載入題庫。<br>錯誤訊息: ${error.message}`, 
+                    html: `無法讀取題庫檔案<br>${error.message}`, 
                     icon: 'error'
                 });
                 document.getElementById('action-buttons').classList.remove('hidden');
@@ -297,13 +306,15 @@
 
         // --- 錯題模式 ---
         function startRetryMode() {
-            const subjectCode = document.getElementById('subject-select').value;
-            if (!subjectCode) {
+            const subjectSelect = document.getElementById('subject-select');
+            const subjectCode = subjectSelect.value;
+            
+            if(!subjectCode) {
                 Swal.fire('請選擇科目', '請先選擇要複習的科目', 'warning');
                 return;
             }
 
-            const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
+            const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
             const wrongDB = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             const wrongList = wrongDB[subjectCode] || [];
 
@@ -325,11 +336,6 @@
         function startExamMode() {
             currentMode = 'exam';
             document.getElementById('exam-mode-view').classList.remove('hidden');
-            // 恢復 UI 狀態
-            document.getElementById('exam-questions-container').classList.remove('hidden');
-            document.getElementById('exam-submit-area').classList.remove('hidden');
-            document.getElementById('exam-review-area').classList.add('hidden');
-
             document.getElementById('exam-info').innerText = `${currentSubjectName} (共 ${currentQuestions.length} 題)`;
             
             const container = document.getElementById('exam-questions-container');
@@ -366,7 +372,7 @@
             clearInterval(timerInterval);
             let correct = 0;
             let wrongCount = 0;
-            let wrongDetails = []; // 需求4: 收集錯題詳情
+            let wrongDetails = []; // 儲存錯題詳解
             
             currentQuestions.forEach((q, idx) => {
                 const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
@@ -375,12 +381,12 @@
                 } else {
                     wrongCount++;
                     saveWrongQuestion(currentSubjectCode, q);
-                    // 紀錄錯題以便顯示
+                    // 紀錄錯題資訊
                     wrongDetails.push({
-                        idx: idx + 1,
-                        question: q,
+                        q: q.q,
                         userAns: ans || "未作答",
-                        correctAns: q.ans
+                        correctAns: q.ans,
+                        options: q.options
                     });
                 }
             });
@@ -390,77 +396,54 @@
 
             saveLog('考卷模式', `${score}分`);
             
-            // 彈窗顯示分數
+            // 生成彈窗與檢討連結
             Swal.fire({ 
                 title: '測驗結果', 
                 html: `
                     <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
                     <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
-                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm mb-4">發現 ${wrongCount} 題錯誤</div><p class="text-sm text-gray-400">點擊確定查看錯題檢討</p>` : ''}
+       
+                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm mt-2">有 ${wrongCount} 題答錯</div>` : ''}
                 `, 
                 icon: score >= 60 ? 'success' : 'warning',
-                confirmButtonText: wrongCount > 0 ? '查看錯題檢討' : '回首頁',
-                allowOutsideClick: false
-            }).then(() => {
-                if (wrongCount > 0) {
-                    // 需求4: 進入錯題檢討模式
-                    renderExamReview(wrongDetails);
+                confirmButtonText: wrongCount > 0 ? '查看錯題與詳解' : '回首頁'
+            }).then((result) => {
+                if (result.isConfirmed && wrongCount > 0) {
+                    showExamReview(score, wrongDetails);
                 } else {
                     location.reload();
                 }
             });
         }
 
-        // --- 顯示錯題檢討介面 ---
-        function renderExamReview(wrongDetails) {
-            const container = document.getElementById('exam-questions-container');
-            document.getElementById('exam-submit-area').classList.add('hidden'); // 隱藏交卷按鈕
-            document.getElementById('exam-review-area').classList.remove('hidden'); // 顯示回首頁按鈕
-            document.getElementById('exam-info').innerText = "錯題檢討模式";
+        // --- 顯示錯題檢討 (新增) ---
+        function showExamReview(score, details) {
+            document.getElementById('exam-mode-view').classList.add('hidden');
+            document.getElementById('exam-review-view').classList.remove('hidden');
+            document.getElementById('review-score-display').innerText = `${score}分`;
             
-            window.scrollTo(0,0);
-
-            if (wrongDetails.length === 0) return;
-
-            container.innerHTML = `<div class="text-center mb-6 text-red-600 font-bold">以下列出您答錯的題目：</div>` + wrongDetails.map(detail => {
-                const q = detail.question;
+            const list = document.getElementById('review-list');
+            list.innerHTML = details.map((item, idx) => {
+                // 找出正確選項文字與錯誤選項文字
+                const correctOptText = item.options[["A","B","C","D"].indexOf(item.correctAns)];
                 return `
-                <div class="bg-red-50 p-6 rounded-lg border border-red-200 shadow-sm mb-4">
-                    <div class="flex gap-2 mb-3">
-                        <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded h-fit">Q${detail.idx}</span>
-                        <p class="font-bold text-lg text-gray-800 leading-relaxed">${q.q}</p>
+                <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                    <div class="flex gap-2 mb-2">
+                        <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded h-fit">錯題 ${idx+1}</span>
+                        <p class="font-bold text-gray-800">${item.q}</p>
                     </div>
-                    <div class="space-y-2 pl-2 mb-3 border-l-4 border-gray-300 ml-1">
-                        ${q.options.map((opt, i) => {
-                            const val = ["A","B","C","D"][i];
-                            let extraClass = "";
-                            let icon = "";
-                            
-                            // 標示正確與錯誤選項
-                            if (val === detail.correctAns) {
-                                extraClass = "bg-green-100 border-green-300 text-green-800 font-bold";
-                                icon = "✅ ";
-                            } else if (val === detail.userAns) {
-                                extraClass = "bg-red-100 border-red-300 text-red-800 line-through opacity-70";
-                                icon = "❌ ";
-                            }
-
-                            return `
-                            <div class="p-2 rounded border ${extraClass || 'border-transparent text-gray-500'}">
-                                ${icon}<span class="inline-block w-6">${val}</span> ${opt}
-                            </div>`;
-                        }).join('')}
+                    <div class="ml-2 text-sm space-y-1">
+                        <p class="text-red-600">您的回答: <b>${item.userAns}</b></p>
+                        <p class="text-green-700">正確答案: <b>${item.correctAns}</b> <span class="text-gray-600">(${correctOptText})</span></p>
                     </div>
-                    <div class="text-sm">
-                        <span class="text-gray-500">您的答案：</span><span class="text-red-600 font-bold mr-4">${detail.userAns}</span>
-                        <span class="text-gray-500">正確答案：</span><span class="text-green-600 font-bold text-lg">${detail.correctAns}</span>
-                    </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
+            
+            // 滾動到頂部
+            window.scrollTo(0,0);
         }
 
-        // --- 練習模式 (需求1: 正確0.25s自動跳，錯誤點擊跳) ---
+        // --- 練習模式 (答對0.25s換題，答錯點擊換題) ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
@@ -480,7 +463,7 @@
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
             
-            // 隱藏全螢幕點擊層 (預設)
+            // 隱藏遮罩
             document.getElementById('next-trigger-layer').style.display = 'none';
 
             q.options.forEach((opt, i) => {
@@ -500,34 +483,32 @@
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             
-            // 需求1: 判斷對錯與跳轉邏輯
             if(userAns === correctAns) {
-                // --- 答對 ---
+                // === 答對邏輯 ===
                 practiceCorrectCount++;
                 el.classList.add('correct');
-                feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold">回答正確！(自動跳轉)</div>`;
-                if(isRetryMode) removeWrongQuestion(currentSubjectCode, questionObj);
+                feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold">回答正確！(0.25秒後下一題)</div>`;
                 
-                // 0.25秒後自動跳轉
+                if(isRetryMode) removeWrongQuestion(currentSubjectCode, questionObj);
+
+                // 0.25秒後自動跳下一題
                 setTimeout(() => {
                     nextPracticeQuestion();
-                }, 250);
+                }, 250); 
 
             } else {
-                // --- 答錯 ---
+                // === 答錯邏輯 ===
                 el.classList.add('wrong');
                 feedback.innerHTML = `
-                    <div class="text-red-600 font-bold mb-1">回答錯誤</div>
+                    <div class="text-red-600 font-bold mb-1">回答錯誤 (點擊畫面任意處繼續)</div>
                     <div class="text-gray-600">正確答案是：<b class="text-green-600 text-lg">${correctAns}</b></div>
                 `;
                 const correctIdx = ["A","B","C","D"].indexOf(correctAns);
                 if (correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
                 saveWrongQuestion(currentSubjectCode, questionObj);
-
-                // 顯示全螢幕點擊層 (答錯時才顯示，等待使用者點擊)
-                setTimeout(() => {
-                    document.getElementById('next-trigger-layer').style.display = 'block';
-                }, 100); 
+                
+                // 顯示全螢幕點擊遮罩，等待使用者點擊
+                document.getElementById('next-trigger-layer').style.display = 'block';
             }
         }
 
@@ -551,11 +532,12 @@
                 }).then(() => location.reload());
             }
         }
+
         // --- 錯題管理 (Local) ---
         function saveWrongQuestion(subject, qObj) {
-            // 如果是混合模式，這裡可能會需要特殊處理，目前先簡化存入當前選擇的 subjectCode (combined_mil_pol)
-            // 建議：混合模式下，錯題還是分開存比較好，但在簡易版中，存入 'combined_mil_pol' 也是一種策略
-            // 為了避免複雜，我們直接存入當前 subjectCode
+            // 如果是綜合題庫，記錄到 "mix_mil_pol" 裡面，或者你可以選擇拆開
+            // 這裡為了簡單，如果是綜合模式，我們將其存入該題原本所屬的類別較難判斷
+            // 因此統一存入當前選擇的 subjectCode (mix_mil_pol)
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             if (!db[subject]) db[subject] = [];
             if (!db[subject].some(item => item.q === qObj.q)) {
@@ -584,6 +566,7 @@
 
             // 2. 存後台紀錄 (嘗試上傳 Google Form)
             if (GOOGLE_FORM_URL && GOOGLE_FORM_URL.startsWith('http')) {
+                // 雲端模式
                 const formData = new FormData();
                 formData.append(FORM_IDS.ip, userIP);
                 formData.append(FORM_IDS.device, deviceType);
@@ -594,7 +577,7 @@
 
                 fetch(GOOGLE_FORM_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
+                    mode: 'no-cors', // 重要：避免 CORS 錯誤
                     body: formData
                 }).catch(err => console.error("Cloud upload failed", err));
             }
@@ -639,6 +622,7 @@
 
             let logs = [];
             
+            // 嘗試讀取雲端 CSV
             if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
                 try {
                     const res = await fetch(GOOGLE_SHEET_CSV_URL);
@@ -663,13 +647,14 @@
             return lines.map(line => {
                 const cols = line.split(','); 
                 if(cols.length < 5) return null;
+                // 注意：這裡依照您的要求修改 result 的位置
                 return {
                     date: cols[0].replace(/"/g, ''), 
                     ip: cols[1]?.replace(/"/g, '') || '-',
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
                     mode: cols[4]?.replace(/"/g, '') || '-',
-                    result: cols[6]?.replace(/"/g, '') || '-'
+                    result: cols[6]?.replace(/"/g, '') || '-' // ★ 依照您的要求改成 cols[6]
                 };
             }).filter(x => x);
         }
