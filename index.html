@@ -17,24 +17,6 @@
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* 全螢幕點擊層 (下一題用) */
-        #next-trigger-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; cursor: pointer;
-            background: rgba(0,0,0,0); /* 透明，但可點擊 */
-            display: none;
-        }
-        /* 提示文字動畫 */
-        .tap-hint-box {
-            position: absolute; bottom: 40px; width: 100%; text-align: center;
-            pointer-events: none; /* 讓點擊穿透到 layer */
-        }
-        .tap-hint-text {
-            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
-            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -121,12 +103,6 @@
             </div>
         </div>
 
-        <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
-            <div class="tap-hint-box">
-                <span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span>
-            </div>
-        </div>
-
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
@@ -163,7 +139,7 @@
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">後台管理系統 (所有紀錄)</h2>
-                    <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">資料來源：本機暫存 (未連線雲端)</p>
+                    <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">初始化中...</p>
                 </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
@@ -183,7 +159,7 @@
                 </table>
             </div>
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
-                <span class="text-xs text-gray-400">顯示最近 100 筆</span>
+                <span class="text-xs text-gray-400">若有新資料請重新開啟此視窗</span>
                 <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition">清空本機暫存紀錄</button>
             </div>
         </div>
@@ -191,21 +167,18 @@
 
     <script>
         // ==========================================
-        //  【雲端資料庫設定區】
-        //   若要收集所有人的資料，請建立 Google Form 並填寫以下資訊。
-        //   若留空，系統將自動使用 LocalStorage (僅記錄本機)。
+        //  【雲端資料庫設定區 - 已保留您的設定】
         // ==========================================
-        const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScqZn3A4HLzNL-a8_u2Y_jCYqiEnQy6Vn5Tv2Y8STrod4u9gw/formResponse"; // 範例: "https://docs.google.com/forms/d/e/XXXXXX/formResponse"
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ28Z7fBJziaSJ5EQVCAlK_AVz8zM4KQL-8kCmiPGqjlpxuSw3pGKY0ZuVi5AHfV3WnlQzhI998yDuN/pub?output=csv"; // 範例: "https://docs.google.com/spreadsheets/d/e/XXXXXX/pub?output=csv"
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScqZn3A4HLzNL-a8_u2Y_jCYqiEnQy6Vn5Tv2Y8STrod4u9gw/formResponse";
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ28Z7fBJziaSJ5EQVCAlK_AVz8zM4KQL-8kCmiPGqjlpxuSw3pGKY0ZuVi5AHfV3WnlQzhI998yDuN/pub?output=csv";
         
-        // 請填入 Google Form 對應欄位的 entry ID (如 entry.123456)
         const FORM_IDS = {
-            ip:      "entry.214623373", // 請替換
-            device:  "entry.1194870592", // 請替換
-            subject: "entry.1570979862", // 請替換
-            mode:    "entry.610680044", // 請替換
-            result:  "entry.705527857", // 請替換
-            date:    "entry.40424165"  // 請替換
+            ip:      "entry.214623373", 
+            device:  "entry.1194870592",
+            subject: "entry.1570979862",
+            mode:    "entry.610680044",
+            result:  "entry.705527857",
+            date:    "entry.40424165"
         };
         // ==========================================
 
@@ -354,7 +327,7 @@
             }).then(() => location.reload());
         }
 
-        // --- 練習模式 (點擊任意處下一題) ---
+        // --- 練習模式 (自動跳轉) ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
@@ -373,9 +346,6 @@
             const optsDiv = document.getElementById('practice-options');
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
-            
-            // 隱藏全螢幕點擊層，避免還沒答題就點到下一題
-            document.getElementById('next-trigger-layer').style.display = 'none';
 
             q.options.forEach((opt, i) => {
                 const val = ["A","B","C","D"][i];
@@ -394,12 +364,7 @@
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             
-            // 顯示全螢幕透明點擊層
-            // 使用 setTimeout 避免使用者連點導致誤觸下一題
-            setTimeout(() => {
-                document.getElementById('next-trigger-layer').style.display = 'block';
-            }, 100); 
-
+            // 判斷對錯
             if(userAns === correctAns) {
                 practiceCorrectCount++;
                 el.classList.add('correct');
@@ -415,6 +380,11 @@
                 if (correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
                 saveWrongQuestion(currentSubjectCode, questionObj);
             }
+
+            // 【自動跳轉功能】 設定 1 秒後 (1000ms) 進入下一題
+            setTimeout(() => {
+                nextPracticeQuestion();
+            }, 1000);
         }
 
         function nextPracticeQuestion() {
@@ -482,14 +452,6 @@
                     mode: 'no-cors', // 重要：避免 CORS 錯誤
                     body: formData
                 }).catch(err => console.error("Cloud upload failed", err));
-            } else {
-                // 單機模式 (存 LocalStorage 給管理員看 - 僅限本機)
-                const adminLogs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
-                adminLogs.unshift({
-                    date: now, ip: userIP, device: deviceType, 
-                    subject: currentSubjectName, mode: modeStr, result: resultStr
-                });
-                localStorage.setItem('gh_admin_logs_local', JSON.stringify(adminLogs));
             }
         }
 
@@ -542,14 +504,11 @@
                     hint.classList.add("text-green-600");
                 } catch (e) {
                     console.error(e);
-                    hint.innerText = "雲端讀取失敗，顯示本機資料";
-                    logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                    hint.innerText = "雲端讀取失敗，請確認試算表已發布";
+                    hint.classList.remove("text-green-600");
                 }
             } else {
-                // 讀取本機
-                logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
-                hint.innerText = "資料來源：本機暫存 (未設定雲端連結)";
-                hint.classList.remove("text-green-600");
+                hint.innerText = "未設定雲端連結";
             }
 
             renderAdminTable(logs);
@@ -559,11 +518,10 @@
             // 簡單 CSV 解析 (假設 Google Sheets 格式)
             const lines = csv.split('\n').slice(1); // 去掉標題
             return lines.map(line => {
-                // 處理逗號分隔 (簡易版)
                 const cols = line.split(','); 
                 // Google Form 順序: Timestamp, IP, Device, Subject, Mode, Result, Date
-                // 注意：這裡需根據您的實際欄位順序調整，通常 Form 會自動加 Timestamp 在第一欄
                 if(cols.length < 5) return null;
+                // 注意：CSV 內容可能包含引號，這裡做簡易處理
                 return {
                     date: cols[0].replace(/"/g, ''), // Timestamp
                     ip: cols[1]?.replace(/"/g, '') || '-',
@@ -594,9 +552,9 @@
         }
 
         function clearLogs() {
-            if(confirm('確定要清空「本機」紀錄嗎？(雲端資料需至 Google Sheet 刪除)')) { 
+            if(confirm('這只會清空「本機」的快取，雲端試算表的資料請去 Google Sheets 刪除。確定嗎？')) { 
                 localStorage.removeItem('gh_admin_logs_local'); 
-                fetchAdminLogs(); 
+                alert('本機快取已清空');
             }
         }
     </script>
