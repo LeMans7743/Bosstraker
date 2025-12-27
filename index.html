@@ -10,49 +10,41 @@
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; user-select: none; }
         .hidden { display: none; }
+        
         /* 選項卡片 */
         .option-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .option-card:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .correct { background-color: #dcfce7 !important; border-color: #16a34a !important; color: #166534; }
         .wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b; }
         
-        /* 科目選擇卡片 (首頁) */
-        .subject-card { 
-            cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; 
-            padding: 1rem; text-align: center; transition: all 0.2s; background: white;
-            position: relative; overflow: hidden;
+        /* 科目選擇卡片 (首頁) - 新增樣式 */
+        .subject-card {
+            cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
+            text-align: center; transition: all 0.2s; background: white;
+            font-weight: bold; color: #64748b;
         }
-        .subject-card:hover { border-color: #93c5fd; transform: translateY(-2px); }
-        .subject-card.active { border-color: #2563eb; background-color: #eff6ff; color: #1e40af; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
-        .subject-card.active::after {
-            content: '✔'; position: absolute; top: 5px; right: 5px; 
-            background: #2563eb; color: white; width: 20px; height: 20px; 
-            border-radius: 50%; font-size: 12px; line-height: 20px;
+        .subject-card:hover { border-color: #93c5fd; }
+        .subject-card.active { 
+            border-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; 
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); 
         }
 
-        /* 紀錄頁籤按鈕 */
-        .tab-btn { @apply px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition; }
-        .tab-btn.active { @apply text-blue-600 border-blue-600; }
-        
-        .mode-pill { @apply px-4 py-1.5 rounded-full text-sm font-bold border transition cursor-pointer text-center flex-1; }
-        .mode-pill.active { @apply bg-gray-800 text-white border-gray-800; }
-        .mode-pill.inactive { @apply bg-white text-gray-500 border-gray-300 hover:bg-gray-50; }
+        /* 紀錄頁籤 (Tabs) */
+        .tab-btn {
+            padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #64748b;
+        }
+        .tab-btn:hover { background-color: #f1f5f9; }
+        .tab-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* 模式切換按鈕 */
+        .mode-switch-btn {
+            flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #94a3b8;
+        }
+        .mode-switch-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
 
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* 全螢幕點擊層 */
-        #next-trigger-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; cursor: pointer; background: rgba(0,0,0,0); display: none;
-        }
-        .tap-hint-box { position: absolute; bottom: 40px; width: 100%; text-align: center; pointer-events: none; }
-        .tap-hint-text {
-            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
-            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -140,6 +132,12 @@
         </div>
 
     </main>
+
+    <footer class="text-center text-gray-400 py-8 text-xs pb-24">
+        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition" title="連續點擊 3 次開啟後台">
+            © 2025 Online Exam System.
+        </p>
+    </footer>
 
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
@@ -263,15 +261,14 @@
             currentSubjectName = el.innerText;
         }
 
-        // --- 核心功能 1: 讀取題庫 ---
+        // --- 核心功能: 讀取題庫 ---
         async function prepareExam(mode) {
             const subjectCode = document.getElementById('subject-select').value;
-            // 重新確認 Subject Name
+            // 確認一下當前選中的文字
             const cards = document.querySelectorAll('.subject-card');
             cards.forEach(c => {
                 if(c.classList.contains('active')) currentSubjectName = c.innerText;
             });
-
             const qCount = parseInt(document.getElementById('question-count').value);
             
             document.getElementById('action-buttons').classList.add('hidden');
@@ -309,7 +306,8 @@
         // --- 錯題模式 ---
         function startRetryMode() {
             const subjectCode = document.getElementById('subject-select').value;
-             const cards = document.querySelectorAll('.subject-card');
+            // 更新當前科目名稱
+            const cards = document.querySelectorAll('.subject-card');
             cards.forEach(c => {
                 if(c.classList.contains('active')) currentSubjectName = c.innerText;
             });
@@ -448,7 +446,7 @@
                 saveWrongQuestion(currentSubjectCode, questionObj);
             }
 
-            setTimeout(() => { nextPracticeQuestion(); }, 1000);
+            setTimeout(() => { nextPracticeQuestion(); }, 250);
         }
 
         function nextPracticeQuestion() {
@@ -503,7 +501,7 @@
         }
 
         // ==========================================
-        //  【我的考試紀錄 - 新版邏輯】
+        //  【我的考試紀錄 - UI】
         // ==========================================
         function showUserRecords() {
             document.getElementById('user-record-modal').classList.remove('hidden');
@@ -511,8 +509,7 @@
         }
 
         function setUserRecMode(modeVal, el) {
-            curRecMode = (modeVal === 'exam') ? '考卷模式' : '練習模式'; // 練習模式包含 "錯題複習"
-            
+            curRecMode = (modeVal === 'exam') ? '考卷模式' : '練習模式'; 
             document.querySelectorAll('.mode-switch-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             renderUserRecords();
@@ -521,7 +518,6 @@
         function setUserRecSubject(subjCode, el) {
             const map = { 'chinese': '國文', 'english': '英文', 'politics': '政治', 'military': '軍事' };
             curRecSubject = map[subjCode];
-            
             document.querySelectorAll('#user-rec-subject-tabs .tab-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             renderUserRecords();
@@ -553,18 +549,14 @@
             statusText.innerText = `篩選：${curRecSubject} | ${curRecMode}`;
 
             let logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
-
-            // 1. 篩選科目
             logs = logs.filter(l => l.subject === curRecSubject);
 
-            // 2. 篩選模式 (練習模式包含 "練習模式" 與 "錯題複習")
             if (curRecMode === '考卷模式') {
                 logs = logs.filter(l => l.mode === '考卷模式');
             } else {
                 logs = logs.filter(l => l.mode === '練習模式' || l.mode === '錯題複習');
             }
 
-            // 渲染
             if (userViewMode === 'list') {
                 const tbody = document.getElementById('user-record-body');
                 if (logs.length === 0) {
@@ -587,18 +579,13 @@
             const ctx = document.getElementById('userChartCanvas').getContext('2d');
             if (userChartInstance) userChartInstance.destroy();
 
-            // 舊到新排序
             const chartData = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            const labels = chartData.map(l => l.date.split(' ')[0]); // 取日期
+            const labels = chartData.map(l => l.date.split(' ')[0]);
             const dataPoints = chartData.map(l => {
-                // 解析分數
                 if (l.result.includes('分')) return parseInt(l.result);
                 if (l.result.includes('/')) {
                     const parts = l.result.split('/');
-                    const num = parseInt(parts[0]);
-                    const total = parseInt(parts[1]);
-                    return Math.round((num / total) * 100);
+                    return Math.round((parseInt(parts[0]) / parseInt(parts[1])) * 100);
                 }
                 return 0;
             });
@@ -621,9 +608,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, max: 100 }
-                    }
+                    scales: { y: { beginAtZero: true, max: 100 } }
                 }
             });
         }
@@ -773,6 +758,7 @@
             const lines = csv.split('\n').slice(1);
             return lines.map(line => {
                 const cols = line.split(','); 
+                //cols[6] 讀取第7欄 (0-based index)
                 if(cols.length < 5) return null;
                 return {
                     date: cols[0].replace(/"/g, ''),
@@ -780,7 +766,7 @@
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
                     mode: cols[4]?.replace(/"/g, '') || '-',
-                    result: cols[6]?.replace(/"/g, '') || '-'
+                    result: cols[6]?.replace(/"/g, '') || '-' // 關鍵修改
                 };
             }).filter(x => x);
         }
