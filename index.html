@@ -6,6 +6,7 @@
     <title>GitHub 完整題庫測驗系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; user-select: none; }
         .hidden { display: none; }
@@ -17,6 +18,24 @@
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 全螢幕點擊層 (下一題用) */
+        #next-trigger-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; cursor: pointer;
+            background: rgba(0,0,0,0); /* 透明，但可點擊 */
+            display: none;
+        }
+        /* 提示文字動畫 */
+        .tap-hint-box {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            pointer-events: none; /* 讓點擊穿透到 layer */
+        }
+        .tap-hint-text {
+            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -103,6 +122,12 @@
             </div>
         </div>
 
+        <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
+            <div class="tap-hint-box">
+                <span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span>
+            </div>
+        </div>
+
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
@@ -112,24 +137,48 @@
     </footer>
 
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[80vh]">
+        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
             <div class="p-5 border-b flex justify-between items-center bg-cyan-50 rounded-t-xl">
                 <h2 class="text-xl font-bold text-cyan-800">我的考試紀錄</h2>
-                <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
+                <button onclick="closeUserModal()" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
+            
+            <div class="p-4 bg-gray-50 flex flex-wrap gap-3 border-b items-center">
+                <select id="user-filter-subject" class="border rounded px-3 py-1 text-sm" onchange="renderUserRecords()">
+                    <option value="all">所有科目</option>
+                    <option value="chinese">國文</option>
+                    <option value="english">英文</option>
+                    <option value="politics">政治</option>
+                    <option value="military">軍事</option>
+                </select>
+                <select id="user-sort" class="border rounded px-3 py-1 text-sm" onchange="renderUserRecords()">
+                    <option value="date-desc">日期 (新→舊)</option>
+                    <option value="date-asc">日期 (舊→新)</option>
+                </select>
+                <div class="flex-grow"></div>
+                <div class="flex bg-white rounded-lg border overflow-hidden">
+                    <button id="btn-view-list" onclick="switchUserView('list')" class="px-4 py-1 text-sm bg-blue-100 text-blue-700 font-bold">列表</button>
+                    <button id="btn-view-chart" onclick="switchUserView('chart')" class="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100">圖表</button>
+                </div>
+            </div>
+
             <div class="overflow-auto flex-grow p-4">
-               
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr>
-                            <th class="p-3">時間</th>
-                            <th class="p-3">科目</th>
-                            <th class="p-3">模式</th>
-                            <th class="p-3">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-record-body" class="divide-y"></tbody>
-                </table>
+                <div id="user-view-list">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-100 text-gray-600">
+                            <tr>
+                                <th class="p-3">時間</th>
+                                <th class="p-3">科目</th>
+                                <th class="p-3">模式</th>
+                                <th class="p-3">結果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-record-body" class="divide-y"></tbody>
+                    </table>
+                </div>
+                <div id="user-view-chart" class="hidden h-64 sm:h-80 relative w-full">
+                    <canvas id="userChartCanvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -138,29 +187,20 @@
         <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">後台管理系統 (所有紀錄)</h2>
+                    <h2 class="text-xl font-bold text-gray-800">後台管理系統</h2>
                     <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">初始化中...</p>
                 </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            <div class="overflow-auto flex-grow">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600 sticky top-0">
-                        <tr>
-                            <th class="p-4">時間</th>
-                            <th class="p-4">IP</th>
-                            <th class="p-4">裝置</th>
-                            <th class="p-4">科目</th>
-                            <th class="p-4">模式</th>
-                            <th class="p-4">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-log-body" class="divide-y"></tbody>
-                </table>
+            
+            <div class="overflow-auto flex-grow p-4">
+                <div id="admin-content-area"></div>
             </div>
+
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
-                <span class="text-xs text-gray-400">若有新資料請重新開啟此視窗</span>
-                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition">清空本機暫存紀錄</button>
+                <button id="admin-back-btn" onclick="renderAdminIPList()" class="hidden text-blue-600 font-bold hover:underline">← 返回使用者列表</button>
+                <div class="flex-grow"></div>
+                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition text-sm">清空本機暫存</button>
             </div>
         </div>
     </div>
@@ -193,6 +233,8 @@
         let practiceCorrectCount = 0; 
         let isRetryMode = false;
         let userIP = "Loading...";
+        let userChartInstance = null; // Chart.js 實例
+        let adminAllLogs = []; // 後台所有資料暫存
 
         // 嘗試抓取使用者 IP
         fetch('https://api.ipify.org?format=json')
@@ -358,13 +400,10 @@
         }
 
         function checkPractice(el, userAns, correctAns, questionObj) {
-            // 鎖定選項
             document.querySelectorAll('.option-card').forEach(d => d.onclick = null);
-            
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             
-            // 判斷對錯
             if(userAns === correctAns) {
                 practiceCorrectCount++;
                 el.classList.add('correct');
@@ -381,10 +420,7 @@
                 saveWrongQuestion(currentSubjectCode, questionObj);
             }
 
-            // 【自動跳轉功能】 設定 1 秒後 (1000ms) 進入下一題
-            setTimeout(() => {
-                nextPracticeQuestion();
-            }, 500);
+            setTimeout(() => { nextPracticeQuestion(); }, 1000);
         }
 
         function nextPracticeQuestion() {
@@ -394,21 +430,14 @@
                 const label = isRetryMode ? '錯題複習' : '練習模式';
                 const res = `${practiceCorrectCount}/${currentQuestions.length} 題`;
                 saveLog(label, res);
-                
                 Swal.fire({
                     title: '練習結束',
-                    html: `
-                        <div class="text-center">
-                            <h2 class="text-4xl font-bold text-blue-600">${res}</h2>
-                            <p class="text-gray-500 mt-2">點擊按鈕回首頁</p>
-                        </div>
-                    `, 
+                    html: `<div class="text-center"><h2 class="text-4xl font-bold text-blue-600">${res}</h2></div>`, 
                     icon: 'success'
                 }).then(() => location.reload());
             }
         }
 
-        // --- 錯題管理 (Local) ---
         function saveWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             if (!db[subject]) db[subject] = [];
@@ -417,7 +446,6 @@
                 localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
             }
         }
-
         function removeWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             if (db[subject]) {
@@ -425,20 +453,15 @@
                 localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
             }
         }
-
-        // --- 紀錄系統 (本地 + 雲端) ---
         function saveLog(modeStr, resultStr) {
             const now = new Date().toLocaleString();
             const deviceType = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "Mobile/Tablet" : "Desktop";
             
-            // 1. 存個人紀錄 (LocalStorage - 使用者自己看)
             const userLogs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
             userLogs.unshift({ date: now, subject: currentSubjectName, mode: modeStr, result: resultStr });
             localStorage.setItem('gh_user_history_v1', JSON.stringify(userLogs));
 
-            // 2. 存後台紀錄 (嘗試上傳 Google Form)
             if (GOOGLE_FORM_URL && GOOGLE_FORM_URL.startsWith('http')) {
-                // 雲端模式
                 const formData = new FormData();
                 formData.append(FORM_IDS.ip, userIP);
                 formData.append(FORM_IDS.device, deviceType);
@@ -446,32 +469,123 @@
                 formData.append(FORM_IDS.mode, modeStr);
                 formData.append(FORM_IDS.result, resultStr);
                 formData.append(FORM_IDS.date, now);
-
-                fetch(GOOGLE_FORM_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // 重要：避免 CORS 錯誤
-                    body: formData
-                }).catch(err => console.error("Cloud upload failed", err));
+                fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData }).catch(console.error);
             }
         }
 
-        // --- 顯示個人紀錄 ---
+        // ==========================================
+        //  【我的考試紀錄 - UI 與圖表邏輯】
+        // ==========================================
+        let userViewMode = 'list'; // 'list' or 'chart'
+
         function showUserRecords() {
-            const logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
-            const tbody = document.getElementById('user-record-body');
-            tbody.innerHTML = logs.length ? logs.map(l => `
-                <tr class="hover:bg-gray-50 border-b">
-                    <td class="p-3 text-gray-500 text-xs">${l.date}</td>
-                    <td class="p-3 font-bold text-gray-700">${l.subject}</td>
-                    <td class="p-3 text-sm">${l.mode}</td>
-                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
-                </tr>
-            `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
-            
             document.getElementById('user-record-modal').classList.remove('hidden');
+            renderUserRecords();
+        }
+        function closeUserModal() {
+            document.getElementById('user-record-modal').classList.add('hidden');
+        }
+        function switchUserView(mode) {
+            userViewMode = mode;
+            const btnList = document.getElementById('btn-view-list');
+            const btnChart = document.getElementById('btn-view-chart');
+            const divList = document.getElementById('user-view-list');
+            const divChart = document.getElementById('user-view-chart');
+
+            if (mode === 'list') {
+                btnList.className = "px-4 py-1 text-sm bg-blue-100 text-blue-700 font-bold";
+                btnChart.className = "px-4 py-1 text-sm text-gray-600 hover:bg-gray-100";
+                divList.classList.remove('hidden');
+                divChart.classList.add('hidden');
+            } else {
+                btnList.className = "px-4 py-1 text-sm text-gray-600 hover:bg-gray-100";
+                btnChart.className = "px-4 py-1 text-sm bg-blue-100 text-blue-700 font-bold";
+                divList.classList.add('hidden');
+                divChart.classList.remove('hidden');
+            }
+            renderUserRecords();
         }
 
-        // --- 顯示後台紀錄 (Admin) ---
+        function renderUserRecords() {
+            const subjectFilter = document.getElementById('user-filter-subject').value;
+            const sortType = document.getElementById('user-sort').value;
+            
+            let logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
+            
+            // 篩選
+            if (subjectFilter !== 'all') {
+                // 對應中文名稱
+                const map = { 'chinese': '國文', 'english': '英文', 'politics': '政治', 'military': '軍事' };
+                logs = logs.filter(l => l.subject === map[subjectFilter]);
+            }
+            // 排序
+            logs.sort((a, b) => {
+                const da = new Date(a.date);
+                const db = new Date(b.date);
+                return sortType === 'date-desc' ? db - da : da - db;
+            });
+
+            if (userViewMode === 'list') {
+                const tbody = document.getElementById('user-record-body');
+                tbody.innerHTML = logs.length ? logs.map(l => `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-3 text-gray-500 text-xs">${l.date}</td>
+                        <td class="p-3 font-bold text-gray-700">${l.subject}</td>
+                        <td class="p-3 text-sm">${l.mode}</td>
+                        <td class="p-3 font-bold text-blue-600">${l.result}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無符合紀錄</td></tr>';
+            } else {
+                renderUserChart(logs);
+            }
+        }
+
+        function renderUserChart(logs) {
+            const ctx = document.getElementById('userChartCanvas').getContext('2d');
+            if (userChartInstance) userChartInstance.destroy();
+
+            // 整理數據：只取「考卷模式」的分數，或嘗試解析「練習模式」的比例
+            // 為了圖表美觀，我們依照時間(舊到新)排序
+            const chartData = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const labels = chartData.map(l => l.date.split(' ')[0]); // 只取日期部分
+            const dataPoints = chartData.map(l => {
+                if (l.result.includes('分')) return parseInt(l.result);
+                if (l.result.includes('/')) {
+                    const parts = l.result.split('/');
+                    const num = parseInt(parts[0]);
+                    const total = parseInt(parts[1]);
+                    return Math.round((num / total) * 100); // 換算成百分比
+                }
+                return 0;
+            });
+
+            userChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '測驗成績 / 練習正確率 (%)',
+                        data: dataPoints,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        //  【後台管理 - IP 分類與暱稱系統】
+        // ==========================================
         let clicks = 0, timer;
         document.getElementById('secret-trigger').addEventListener('click', () => {
             clicks++; clearTimeout(timer); timer = setTimeout(() => clicks=0, 800);
@@ -479,51 +593,170 @@
                 Swal.fire({
                     title:'管理員登入', input:'password', showCancelButton:true
                 }).then(r => {
-                    if(r.value === 'admin') fetchAdminLogs(); 
+                    if(r.value === 'admin') initAdmin(); 
                     else if(r.value) Swal.fire('密碼錯誤', '', 'error');
                 });
                 clicks = 0;
             }
         });
 
-        async function fetchAdminLogs() {
-            const tbody = document.getElementById('admin-log-body');
-            const hint = document.getElementById('admin-source-hint');
-            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="loader"></div></td></tr>';
+        async function initAdmin() {
             document.getElementById('admin-modal').classList.remove('hidden');
-
-            let logs = [];
+            const hint = document.getElementById('admin-source-hint');
+            hint.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:2px;margin:0"></div> 正在同步雲端資料...';
             
-            // 嘗試讀取雲端 CSV
+            // 1. 抓資料
+            let logs = [];
             if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
                 try {
                     const res = await fetch(GOOGLE_SHEET_CSV_URL);
                     const csvText = await res.text();
-                    logs = parseCSV(csvText); // 自定義解析
+                    logs = parseCSV(csvText);
                     hint.innerText = "資料來源：Google 雲端試算表 (即時連線)";
                     hint.classList.add("text-green-600");
                 } catch (e) {
-                    console.error(e);
-                    hint.innerText = "雲端讀取失敗，請確認試算表已發布";
-                    hint.classList.remove("text-green-600");
+                    hint.innerText = "雲端讀取失敗，顯示本機資料";
+                    logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
                 }
             } else {
-                hint.innerText = "未設定雲端連結";
+                hint.innerText = "未設定雲端連結 (本機模式)";
+                logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
             }
+            adminAllLogs = logs;
+            renderAdminIPList();
+        }
 
-            renderAdminTable(logs);
+        function getNicknames() {
+            return JSON.parse(localStorage.getItem('gh_ip_nicknames') || '{}');
+        }
+
+        // 渲染 IP 列表 (首頁)
+        function renderAdminIPList() {
+            document.getElementById('admin-back-btn').classList.add('hidden');
+            const content = document.getElementById('admin-content-area');
+            const nicknames = getNicknames();
+            
+            // 依 IP 分組
+            const groups = {};
+            adminAllLogs.forEach(l => {
+                const ip = l.ip || 'Unknown';
+                if (!groups[ip]) groups[ip] = { count: 0, totalScore: 0, scoreCount: 0, lastActive: l.date, device: l.device };
+                groups[ip].count++;
+                // 嘗試計算平均分 (只算考卷模式)
+                if (l.mode === '考卷模式' && l.result.includes('分')) {
+                    groups[ip].totalScore += parseInt(l.result);
+                    groups[ip].scoreCount++;
+                }
+                // 更新最後上線時間 (假設 logs 是新->舊，若不是則需比較)
+                if (new Date(l.date) > new Date(groups[ip].lastActive)) {
+                    groups[ip].lastActive = l.date;
+                }
+            });
+
+            const ipList = Object.keys(groups).sort((a,b) => new Date(groups[b].lastActive) - new Date(groups[a].lastActive));
+
+            let html = `
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600">
+                        <tr>
+                            <th class="p-3">使用者 (暱稱/IP)</th>
+                            <th class="p-3">裝置</th>
+                            <th class="p-3">考試次數</th>
+                            <th class="p-3">平均分數</th>
+                            <th class="p-3">最後上線</th>
+                            <th class="p-3">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+            `;
+            
+            html += ipList.map(ip => {
+                const g = groups[ip];
+                const avg = g.scoreCount > 0 ? Math.round(g.totalScore / g.scoreCount) + '分' : '-';
+                const nick = nicknames[ip] || '';
+                const displayName = nick ? `<span class="font-bold text-blue-700">${nick}</span> <span class="text-xs text-gray-400">(${ip})</span>` : `<span class="font-mono text-gray-600">${ip}</span>`;
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">
+                            ${displayName}
+                            <button onclick="editNickname('${ip}')" class="ml-2 text-gray-400 hover:text-blue-500" title="修改暱稱">✏️</button>
+                        </td>
+                        <td class="p-3 text-xs text-gray-500">${g.device}</td>
+                        <td class="p-3">${g.count}</td>
+                        <td class="p-3 font-bold ${avg!=='-' && parseInt(avg)>=60 ? 'text-green-600':'text-gray-500'}">${avg}</td>
+                        <td class="p-3 text-xs text-gray-500">${g.lastActive}</td>
+                        <td class="p-3">
+                            <button onclick="renderAdminDetail('${ip}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">詳細紀錄</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            html += `</tbody></table>`;
+            content.innerHTML = html;
+        }
+
+        // 修改暱稱
+        function editNickname(ip) {
+            const nicknames = getNicknames();
+            Swal.fire({
+                title: '設定暱稱',
+                text: `為 IP: ${ip} 設定一個好記的名字`,
+                input: 'text',
+                inputValue: nicknames[ip] || '',
+                showCancelButton: true
+            }).then(r => {
+                if (r.isConfirmed) {
+                    nicknames[ip] = r.value;
+                    localStorage.setItem('gh_ip_nicknames', JSON.stringify(nicknames));
+                    renderAdminIPList(); // 重新渲染
+                }
+            });
+        }
+
+        // 查看詳細紀錄
+        function renderAdminDetail(targetIp) {
+            document.getElementById('admin-back-btn').classList.remove('hidden');
+            const content = document.getElementById('admin-content-area');
+            const nicknames = getNicknames();
+            const nick = nicknames[targetIp] || targetIp;
+            
+            const userLogs = adminAllLogs.filter(l => l.ip === targetIp);
+
+            let html = `
+                <div class="mb-4 text-lg font-bold text-gray-700">
+                    <span class="text-blue-600">${nick}</span> 的詳細紀錄
+                </div>
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600">
+                        <tr>
+                            <th class="p-3">時間</th>
+                            <th class="p-3">科目</th>
+                            <th class="p-3">模式</th>
+                            <th class="p-3">結果</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+            `;
+            html += userLogs.map(l => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3 text-gray-500">${l.date}</td>
+                    <td class="p-3 font-bold">${l.subject}</td>
+                    <td class="p-3 text-xs">${l.mode}</td>
+                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
+                </tr>
+            `).join('');
+            html += `</tbody></table>`;
+            content.innerHTML = html;
         }
 
         function parseCSV(csv) {
-            // 簡單 CSV 解析 (假設 Google Sheets 格式)
-            const lines = csv.split('\n').slice(1); // 去掉標題
+            const lines = csv.split('\n').slice(1);
             return lines.map(line => {
                 const cols = line.split(','); 
-                // Google Form 順序: Timestamp, IP, Device, Subject, Mode, Date, Result
                 if(cols.length < 5) return null;
-                // 注意：CSV 內容可能包含引號，這裡做簡易處理
                 return {
-                    date: cols[0].replace(/"/g, ''), // Timestamp
+                    date: cols[0].replace(/"/g, ''),
                     ip: cols[1]?.replace(/"/g, '') || '-',
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
@@ -531,24 +764,6 @@
                     result: cols[6]?.replace(/"/g, '') || '-'
                 };
             }).filter(x => x);
-        }
-
-        function renderAdminTable(logs) {
-            const tbody = document.getElementById('admin-log-body');
-            if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
-            } else {
-                tbody.innerHTML = logs.map(l => `
-                    <tr class="hover:bg-gray-50 border-b">
-                        <td class="p-4 text-gray-500 text-xs">${l.date}</td>
-                        <td class="p-4 text-xs font-mono text-gray-400">${l.ip}</td>
-                        <td class="p-4 text-sm">${l.device}</td>
-                        <td class="p-4 font-bold text-gray-700">${l.subject}</td>
-                        <td class="p-4 text-sm">${l.mode}</td>
-                        <td class="p-4 font-bold text-blue-600">${l.result}</td>
-                    </tr>
-                `).join('');
-            }
         }
 
         function clearLogs() {
