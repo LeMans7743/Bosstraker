@@ -6,45 +6,34 @@
     <title>GitHub 完整題庫測驗系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; user-select: none; }
         .hidden { display: none; }
-        
-        /* 選項卡片 */
         .option-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .option-card:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .correct { background-color: #dcfce7 !important; border-color: #16a34a !important; color: #166534; }
         .wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b; }
         
-        /* 科目選擇卡片 (首頁) - 新增樣式 */
-        .subject-card {
-            cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
-            text-align: center; transition: all 0.2s; background: white;
-            font-weight: bold; color: #64748b;
-        }
-        .subject-card:hover { border-color: #93c5fd; }
-        .subject-card.active { 
-            border-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; 
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); 
-        }
-
-        /* 紀錄頁籤 (Tabs) */
-        .tab-btn {
-            padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #64748b;
-        }
-        .tab-btn:hover { background-color: #f1f5f9; }
-        .tab-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        /* 模式切換按鈕 */
-        .mode-switch-btn {
-            flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #94a3b8;
-        }
-        .mode-switch-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
-
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 全螢幕點擊層 (練習模式答錯時用) */
+        #next-trigger-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; cursor: pointer;
+            background: rgba(0,0,0,0); 
+            display: none;
+        }
+        .tap-hint-box {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            pointer-events: none;
+        }
+        .tap-hint-text {
+            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -61,25 +50,27 @@
         <div id="setup-view" class="bg-white p-8 rounded-xl shadow-lg mt-6">
             <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 border-b pb-4">測驗設定</h2>
             
-            <div class="mb-8">
-                <label class="block text-gray-700 font-bold mb-3">選擇科目</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="subject-selection-area">
-                    <div class="subject-card active" onclick="selectSubject('chinese', this)">國文</div>
-                    <div class="subject-card" onclick="selectSubject('english', this)">英文</div>
-                    <div class="subject-card" onclick="selectSubject('politics', this)">政治</div>
-                    <div class="subject-card" onclick="selectSubject('military', this)">軍事</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">選擇科目</label>
+                    <select id="subject-select" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                        <option value="" disabled selected>-- 請選擇科目 --</option>
+                        <option value="chinese">國文</option>
+                        <option value="english">英文</option>
+                        <option value="politics">政治</option>
+                        <option value="military">軍事</option>
+                        <option value="combined_mil_pol" class="font-bold text-blue-600">軍事 & 政治 (混合)</option>
+                    </select>
                 </div>
-                <input type="hidden" id="subject-select" value="chinese">
-            </div>
-
-            <div class="mb-8">
-                <label class="block text-gray-700 font-bold mb-2">題目數量</label>
-                <input type="number" id="question-count" value="50" min="1" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">題目數量</label>
+                    <input type="number" id="question-count" value="50" min="1" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                </div>
             </div>
 
             <div id="loading-spinner" class="hidden text-center py-4">
                 <div class="loader"></div>
-                <p class="text-gray-500 animate-pulse">正在從題庫讀取資料中...</p>
+                <p class="text-gray-500 animate-pulse">正在讀取題庫...</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="action-buttons">
@@ -111,8 +102,13 @@
                 </div>
             </div>
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
-            <div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
+            
+            <div id="exam-submit-area" class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
                 <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">交卷並計算分數</button>
+            </div>
+
+            <div id="exam-review-area" class="hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
+                <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">結束檢討 / 回首頁</button>
             </div>
         </div>
 
@@ -131,61 +127,38 @@
             </div>
         </div>
 
+        <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
+            <div class="tap-hint-box">
+                <span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span>
+            </div>
+        </div>
+
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
-        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition" title="連續點擊 3 次開啟後台">
+        <p id="secret-trigger" class="cursor-default select-none inline-block px-4 py-2 hover:text-gray-300 transition">
             © 2025 Online Exam System.
         </p>
     </footer>
 
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b flex justify-between items-center bg-cyan-50 rounded-t-xl">
                 <h2 class="text-xl font-bold text-cyan-800">我的考試紀錄</h2>
                 <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            
-            <div class="flex border-b bg-gray-50">
-                <div class="mode-switch-btn active" onclick="setUserRecMode('exam', this)">測驗模式 (分數)</div>
-                <div class="mode-switch-btn" onclick="setUserRecMode('practice', this)">練習模式 (題數)</div>
-            </div>
-
-            <div class="p-4 bg-white border-b">
-                <div class="flex flex-wrap gap-2 justify-center" id="user-rec-subject-tabs">
-                    <button class="tab-btn active" onclick="setUserRecSubject('chinese', this)">國文</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('english', this)">英文</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('politics', this)">政治</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('military', this)">軍事</button>
-                </div>
-            </div>
-
-            <div class="flex-grow overflow-hidden flex flex-col">
-                <div class="p-2 text-right bg-gray-50 border-b flex justify-between items-center px-4">
-                    <span class="text-xs text-gray-500" id="rec-status-text">顯示資料...</span>
-                    <div class="flex bg-white rounded-lg border overflow-hidden">
-                        <button onclick="switchUserView('list')" id="btn-view-list" class="px-3 py-1 text-xs bg-blue-100 text-blue-700 font-bold">列表</button>
-                        <button onclick="switchUserView('chart')" id="btn-view-chart" class="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">圖表</button>
-                    </div>
-                </div>
-
-                <div class="overflow-auto p-4 flex-grow relative">
-                    <div id="user-view-list">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-100 text-gray-600">
-                                <tr>
-                                    <th class="p-3">日期</th>
-                                    <th class="p-3">科目</th>
-                                    <th class="p-3">結果</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-record-body" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                    <div id="user-view-chart" class="hidden h-64 w-full">
-                        <canvas id="userChartCanvas"></canvas>
-                    </div>
-                </div>
+            <div class="overflow-auto flex-grow p-4">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600">
+                        <tr>
+                            <th class="p-3">時間</th>
+                            <th class="p-3">科目</th>
+                            <th class="p-3">模式</th>
+                            <th class="p-3">結果</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-record-body" class="divide-y"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -194,20 +167,29 @@
         <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">後台管理系統</h2>
+                    <h2 class="text-xl font-bold text-gray-800">後台管理系統 (所有紀錄)</h2>
                     <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">初始化中...</p>
                 </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            
-            <div class="overflow-auto flex-grow p-4">
-                <div id="admin-content-area"></div>
+            <div class="overflow-auto flex-grow">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                        <tr>
+                            <th class="p-4">時間</th>
+                            <th class="p-4">IP</th>
+                            <th class="p-4">裝置</th>
+                            <th class="p-4">科目</th>
+                            <th class="p-4">模式</th>
+                            <th class="p-4">結果</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-log-body" class="divide-y"></tbody>
+                </table>
             </div>
-
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
-                <button id="admin-back-btn" onclick="renderAdminIPList()" class="hidden text-blue-600 font-bold hover:underline">← 返回使用者列表</button>
-                <div class="flex-grow"></div>
-                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition text-sm">清空本機暫存</button>
+                <span class="text-xs text-gray-400">若有新資料請重新開啟此視窗</span>
+                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition">清空本機暫存紀錄</button>
             </div>
         </div>
     </div>
@@ -227,63 +209,73 @@
             result:  "entry.705527857",
             date:    "entry.40424165"
         };
+        // ==========================================
+
 
         // --- 全域變數 ---
         let currentQuestions = [];
-        let currentSubjectName = "國文"; // 預設
-        let currentSubjectCode = "chinese"; // 預設
+        let currentSubjectName = "";
+        let currentSubjectCode = "";
         let currentMode = "";
         let currentQIndex = 0;
         let timerInterval;
         let practiceCorrectCount = 0; 
         let isRetryMode = false;
         let userIP = "Loading...";
-        
-        // 紀錄頁面狀態
-        let curRecSubject = '國文';
-        let curRecMode = '考卷模式'; 
-        let userViewMode = 'list';
-        let userChartInstance = null;
-        let adminAllLogs = [];
 
-        // 嘗試抓取 IP
+        // 嘗試抓取使用者 IP
         fetch('https://api.ipify.org?format=json')
             .then(res => res.json())
             .then(data => userIP = data.ip)
             .catch(e => userIP = "無法取得 IP");
 
-        // --- 首頁: 選擇科目 (按鈕互動) ---
-        function selectSubject(code, el) {
-            document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('subject-select').value = code;
-            currentSubjectCode = code;
-            currentSubjectName = el.innerText;
-        }
-
-        // --- 核心功能: 讀取題庫 ---
+        // --- 核心功能 1: 讀取題庫 ---
         async function prepareExam(mode) {
-            const subjectCode = document.getElementById('subject-select').value;
-            // 確認一下當前選中的文字
-            const cards = document.querySelectorAll('.subject-card');
-            cards.forEach(c => {
-                if(c.classList.contains('active')) currentSubjectName = c.innerText;
-            });
+            const subjectSelect = document.getElementById('subject-select');
+            const subjectCode = subjectSelect.value;
+            
+            // 需求2: 檢查是否已選擇科目
+            if (!subjectCode) {
+                Swal.fire('請選擇科目', '請先在下拉選單中選擇一個科目', 'warning');
+                return;
+            }
+
+            const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
             const qCount = parseInt(document.getElementById('question-count').value);
             
             document.getElementById('action-buttons').classList.add('hidden');
             document.getElementById('loading-spinner').classList.remove('hidden');
 
             try {
-                const response = await fetch(`questions/${subjectCode}.json`);
-                if (!response.ok) throw new Error(`Error ${response.status}`);
-                const allQuestions = await response.json();
+                let allQuestions = [];
+
+                // 需求3: 混合題庫邏輯
+                if (subjectCode === 'combined_mil_pol') {
+                    // 同時讀取兩個檔案
+                    const [resMil, resPol] = await Promise.all([
+                        fetch('questions/military.json'),
+                        fetch('questions/politics.json')
+                    ]);
+                    
+                    if(!resMil.ok || !resPol.ok) throw new Error("讀取混合題庫失敗，請確認 military.json 與 politics.json 皆存在");
+
+                    const dataMil = await resMil.json();
+                    const dataPol = await resPol.json();
+                    allQuestions = [...dataMil, ...dataPol]; // 合併陣列
+
+                } else {
+                    // 單一題庫邏輯
+                    const response = await fetch(`questions/${subjectCode}.json`);
+                    if (!response.ok) throw new Error(`Error ${response.status}`);
+                    allQuestions = await response.json();
+                }
                 
                 if (!Array.isArray(allQuestions) || allQuestions.length === 0) throw new Error("題庫為空");
 
                 const actualCount = Math.min(qCount, allQuestions.length);
                 currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, actualCount);
                 
+                currentSubjectName = subjectText;
                 currentSubjectCode = subjectCode;
                 isRetryMode = false;
 
@@ -295,7 +287,7 @@
                 console.error(error);
                 Swal.fire({
                     title: '讀取失敗', 
-                    html: `請確認 <b class="text-red-500">${subjectCode}.json</b> 存在。<br>${error.message}`, 
+                    html: `無法載入題庫。<br>錯誤訊息: ${error.message}`, 
                     icon: 'error'
                 });
                 document.getElementById('action-buttons').classList.remove('hidden');
@@ -306,12 +298,12 @@
         // --- 錯題模式 ---
         function startRetryMode() {
             const subjectCode = document.getElementById('subject-select').value;
-            // 更新當前科目名稱
-            const cards = document.querySelectorAll('.subject-card');
-            cards.forEach(c => {
-                if(c.classList.contains('active')) currentSubjectName = c.innerText;
-            });
+            if (!subjectCode) {
+                Swal.fire('請選擇科目', '請先選擇要複習的科目', 'warning');
+                return;
+            }
 
+            const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
             const wrongDB = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             const wrongList = wrongDB[subjectCode] || [];
 
@@ -321,6 +313,7 @@
             }
 
             currentQuestions = wrongList.sort(() => 0.5 - Math.random());
+            currentSubjectName = subjectText;
             currentSubjectCode = subjectCode;
             isRetryMode = true;
 
@@ -332,6 +325,11 @@
         function startExamMode() {
             currentMode = 'exam';
             document.getElementById('exam-mode-view').classList.remove('hidden');
+            // 恢復 UI 狀態
+            document.getElementById('exam-questions-container').classList.remove('hidden');
+            document.getElementById('exam-submit-area').classList.remove('hidden');
+            document.getElementById('exam-review-area').classList.add('hidden');
+
             document.getElementById('exam-info').innerText = `${currentSubjectName} (共 ${currentQuestions.length} 題)`;
             
             const container = document.getElementById('exam-questions-container');
@@ -368,13 +366,22 @@
             clearInterval(timerInterval);
             let correct = 0;
             let wrongCount = 0;
+            let wrongDetails = []; // 需求4: 收集錯題詳情
             
             currentQuestions.forEach((q, idx) => {
                 const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
-                if(ans === q.ans) correct++;
-                else {
+                if(ans === q.ans) {
+                    correct++;
+                } else {
                     wrongCount++;
                     saveWrongQuestion(currentSubjectCode, q);
+                    // 紀錄錯題以便顯示
+                    wrongDetails.push({
+                        idx: idx + 1,
+                        question: q,
+                        userAns: ans || "未作答",
+                        correctAns: q.ans
+                    });
                 }
             });
             
@@ -383,19 +390,77 @@
 
             saveLog('考卷模式', `${score}分`);
             
+            // 彈窗顯示分數
             Swal.fire({ 
                 title: '測驗結果', 
                 html: `
                     <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
                     <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
-                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm">已將 ${wrongCount} 題錯題加入複習庫</div>` : ''}
+                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm mb-4">發現 ${wrongCount} 題錯誤</div><p class="text-sm text-gray-400">點擊確定查看錯題檢討</p>` : ''}
                 `, 
                 icon: score >= 60 ? 'success' : 'warning',
-                confirmButtonText: '確定'
-            }).then(() => location.reload());
+                confirmButtonText: wrongCount > 0 ? '查看錯題檢討' : '回首頁',
+                allowOutsideClick: false
+            }).then(() => {
+                if (wrongCount > 0) {
+                    // 需求4: 進入錯題檢討模式
+                    renderExamReview(wrongDetails);
+                } else {
+                    location.reload();
+                }
+            });
         }
 
-        // --- 練習模式 (自動跳轉) ---
+        // --- 顯示錯題檢討介面 ---
+        function renderExamReview(wrongDetails) {
+            const container = document.getElementById('exam-questions-container');
+            document.getElementById('exam-submit-area').classList.add('hidden'); // 隱藏交卷按鈕
+            document.getElementById('exam-review-area').classList.remove('hidden'); // 顯示回首頁按鈕
+            document.getElementById('exam-info').innerText = "錯題檢討模式";
+            
+            window.scrollTo(0,0);
+
+            if (wrongDetails.length === 0) return;
+
+            container.innerHTML = `<div class="text-center mb-6 text-red-600 font-bold">以下列出您答錯的題目：</div>` + wrongDetails.map(detail => {
+                const q = detail.question;
+                return `
+                <div class="bg-red-50 p-6 rounded-lg border border-red-200 shadow-sm mb-4">
+                    <div class="flex gap-2 mb-3">
+                        <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded h-fit">Q${detail.idx}</span>
+                        <p class="font-bold text-lg text-gray-800 leading-relaxed">${q.q}</p>
+                    </div>
+                    <div class="space-y-2 pl-2 mb-3 border-l-4 border-gray-300 ml-1">
+                        ${q.options.map((opt, i) => {
+                            const val = ["A","B","C","D"][i];
+                            let extraClass = "";
+                            let icon = "";
+                            
+                            // 標示正確與錯誤選項
+                            if (val === detail.correctAns) {
+                                extraClass = "bg-green-100 border-green-300 text-green-800 font-bold";
+                                icon = "✅ ";
+                            } else if (val === detail.userAns) {
+                                extraClass = "bg-red-100 border-red-300 text-red-800 line-through opacity-70";
+                                icon = "❌ ";
+                            }
+
+                            return `
+                            <div class="p-2 rounded border ${extraClass || 'border-transparent text-gray-500'}">
+                                ${icon}<span class="inline-block w-6">${val}</span> ${opt}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-500">您的答案：</span><span class="text-red-600 font-bold mr-4">${detail.userAns}</span>
+                        <span class="text-gray-500">正確答案：</span><span class="text-green-600 font-bold text-lg">${detail.correctAns}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- 練習模式 (需求1: 正確0.25s自動跳，錯誤點擊跳) ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
@@ -414,6 +479,9 @@
             const optsDiv = document.getElementById('practice-options');
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
+            
+            // 隱藏全螢幕點擊層 (預設)
+            document.getElementById('next-trigger-layer').style.display = 'none';
 
             q.options.forEach((opt, i) => {
                 const val = ["A","B","C","D"][i];
@@ -426,16 +494,27 @@
         }
 
         function checkPractice(el, userAns, correctAns, questionObj) {
+            // 鎖定選項
             document.querySelectorAll('.option-card').forEach(d => d.onclick = null);
+            
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             
+            // 需求1: 判斷對錯與跳轉邏輯
             if(userAns === correctAns) {
+                // --- 答對 ---
                 practiceCorrectCount++;
                 el.classList.add('correct');
-                feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold">回答正確！</div>`;
+                feedback.innerHTML = `<div class="flex items-center text-green-700 font-bold">回答正確！(自動跳轉)</div>`;
                 if(isRetryMode) removeWrongQuestion(currentSubjectCode, questionObj);
+                
+                // 0.25秒後自動跳轉
+                setTimeout(() => {
+                    nextPracticeQuestion();
+                }, 250);
+
             } else {
+                // --- 答錯 ---
                 el.classList.add('wrong');
                 feedback.innerHTML = `
                     <div class="text-red-600 font-bold mb-1">回答錯誤</div>
@@ -444,9 +523,12 @@
                 const correctIdx = ["A","B","C","D"].indexOf(correctAns);
                 if (correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
                 saveWrongQuestion(currentSubjectCode, questionObj);
-            }
 
-            setTimeout(() => { nextPracticeQuestion(); }, 250);
+                // 顯示全螢幕點擊層 (答錯時才顯示，等待使用者點擊)
+                setTimeout(() => {
+                    document.getElementById('next-trigger-layer').style.display = 'block';
+                }, 100); 
+            }
         }
 
         function nextPracticeQuestion() {
@@ -456,38 +538,51 @@
                 const label = isRetryMode ? '錯題複習' : '練習模式';
                 const res = `${practiceCorrectCount}/${currentQuestions.length} 題`;
                 saveLog(label, res);
+                
                 Swal.fire({
                     title: '練習結束',
-                    html: `<div class="text-center"><h2 class="text-4xl font-bold text-blue-600">${res}</h2></div>`, 
+                    html: `
+                        <div class="text-center">
+                            <h2 class="text-4xl font-bold text-blue-600">${res}</h2>
+                            <p class="text-gray-500 mt-2">點擊按鈕回首頁</p>
+                        </div>
+                    `, 
                     icon: 'success'
                 }).then(() => location.reload());
             }
         }
+        // --- 錯題管理 (Local) ---
+        function saveWrongQuestion(subject, qObj) {
+            // 如果是混合模式，這裡可能會需要特殊處理，目前先簡化存入當前選擇的 subjectCode (combined_mil_pol)
+            // 建議：混合模式下，錯題還是分開存比較好，但在簡易版中，存入 'combined_mil_pol' 也是一種策略
+            // 為了避免複雜，我們直接存入當前 subjectCode
+            const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
+            if (!db[subject]) db[subject] = [];
+            if (!db[subject].some(item => item.q === qObj.q)) {
+                db[subject].push(qObj);
+                localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
+            }
+        }
 
-        // --- 資料儲存 ---
-        function saveWrongQuestion(subjectCode, qObj) {
+        function removeWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
-            if (!db[subjectCode]) db[subjectCode] = [];
-            if (!db[subjectCode].some(item => item.q === qObj.q)) {
-                db[subjectCode].push(qObj);
+            if (db[subject]) {
+                db[subject] = db[subject].filter(item => item.q !== qObj.q);
                 localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
             }
         }
-        function removeWrongQuestion(subjectCode, qObj) {
-            const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
-            if (db[subjectCode]) {
-                db[subjectCode] = db[subjectCode].filter(item => item.q !== qObj.q);
-                localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
-            }
-        }
+
+        // --- 紀錄系統 (本地 + 雲端) ---
         function saveLog(modeStr, resultStr) {
             const now = new Date().toLocaleString();
             const deviceType = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "Mobile/Tablet" : "Desktop";
             
+            // 1. 存個人紀錄 (LocalStorage - 使用者自己看)
             const userLogs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
             userLogs.unshift({ date: now, subject: currentSubjectName, mode: modeStr, result: resultStr });
             localStorage.setItem('gh_user_history_v1', JSON.stringify(userLogs));
 
+            // 2. 存後台紀錄 (嘗試上傳 Google Form)
             if (GOOGLE_FORM_URL && GOOGLE_FORM_URL.startsWith('http')) {
                 const formData = new FormData();
                 formData.append(FORM_IDS.ip, userIP);
@@ -496,126 +591,32 @@
                 formData.append(FORM_IDS.mode, modeStr);
                 formData.append(FORM_IDS.result, resultStr);
                 formData.append(FORM_IDS.date, now);
-                fetch(GOOGLE_FORM_URL, { method: 'POST', mode: 'no-cors', body: formData }).catch(console.error);
+
+                fetch(GOOGLE_FORM_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    body: formData
+                }).catch(err => console.error("Cloud upload failed", err));
             }
         }
 
-        // ==========================================
-        //  【我的考試紀錄 - UI】
-        // ==========================================
+        // --- 顯示個人紀錄 ---
         function showUserRecords() {
+            const logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
+            const tbody = document.getElementById('user-record-body');
+            tbody.innerHTML = logs.length ? logs.map(l => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-3 text-gray-500 text-xs">${l.date}</td>
+                    <td class="p-3 font-bold text-gray-700">${l.subject}</td>
+                    <td class="p-3 text-sm">${l.mode}</td>
+                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
+            
             document.getElementById('user-record-modal').classList.remove('hidden');
-            renderUserRecords();
         }
 
-        function setUserRecMode(modeVal, el) {
-            curRecMode = (modeVal === 'exam') ? '考卷模式' : '練習模式'; 
-            document.querySelectorAll('.mode-switch-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            renderUserRecords();
-        }
-
-        function setUserRecSubject(subjCode, el) {
-            const map = { 'chinese': '國文', 'english': '英文', 'politics': '政治', 'military': '軍事' };
-            curRecSubject = map[subjCode];
-            document.querySelectorAll('#user-rec-subject-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            renderUserRecords();
-        }
-
-        function switchUserView(mode) {
-            userViewMode = mode;
-            const btnList = document.getElementById('btn-view-list');
-            const btnChart = document.getElementById('btn-view-chart');
-            const divList = document.getElementById('user-view-list');
-            const divChart = document.getElementById('user-view-chart');
-
-            if (mode === 'list') {
-                btnList.className = "px-3 py-1 text-xs bg-blue-100 text-blue-700 font-bold";
-                btnChart.className = "px-3 py-1 text-xs text-gray-600 hover:bg-gray-100";
-                divList.classList.remove('hidden');
-                divChart.classList.add('hidden');
-            } else {
-                btnList.className = "px-3 py-1 text-xs text-gray-600 hover:bg-gray-100";
-                btnChart.className = "px-3 py-1 text-xs bg-blue-100 text-blue-700 font-bold";
-                divList.classList.add('hidden');
-                divChart.classList.remove('hidden');
-            }
-            renderUserRecords();
-        }
-
-        function renderUserRecords() {
-            const statusText = document.getElementById('rec-status-text');
-            statusText.innerText = `篩選：${curRecSubject} | ${curRecMode}`;
-
-            let logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
-            logs = logs.filter(l => l.subject === curRecSubject);
-
-            if (curRecMode === '考卷模式') {
-                logs = logs.filter(l => l.mode === '考卷模式');
-            } else {
-                logs = logs.filter(l => l.mode === '練習模式' || l.mode === '錯題複習');
-            }
-
-            if (userViewMode === 'list') {
-                const tbody = document.getElementById('user-record-body');
-                if (logs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-gray-400">此科目/模式下尚無紀錄</td></tr>';
-                } else {
-                    tbody.innerHTML = logs.map(l => `
-                        <tr class="hover:bg-gray-50 border-b">
-                            <td class="p-3 text-xs text-gray-500">${l.date}</td>
-                            <td class="p-3 font-bold text-gray-700">${l.subject}</td>
-                            <td class="p-3 font-bold text-blue-600">${l.result}</td>
-                        </tr>
-                    `).join('');
-                }
-            } else {
-                renderUserChart(logs);
-            }
-        }
-
-        function renderUserChart(logs) {
-            const ctx = document.getElementById('userChartCanvas').getContext('2d');
-            if (userChartInstance) userChartInstance.destroy();
-
-            const chartData = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
-            const labels = chartData.map(l => l.date.split(' ')[0]);
-            const dataPoints = chartData.map(l => {
-                if (l.result.includes('分')) return parseInt(l.result);
-                if (l.result.includes('/')) {
-                    const parts = l.result.split('/');
-                    return Math.round((parseInt(parts[0]) / parseInt(parts[1])) * 100);
-                }
-                return 0;
-            });
-
-            const labelStr = (curRecMode === '考卷模式') ? '測驗分數' : '練習正確率 (%)';
-
-            userChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: labelStr,
-                        data: dataPoints,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, max: 100 } }
-                }
-            });
-        }
-
-        // ==========================================
-        //  【後台管理】
-        // ==========================================
+        // --- 顯示後台紀錄 (Admin) ---
         let clicks = 0, timer;
         document.getElementById('secret-trigger').addEventListener('click', () => {
             clicks++; clearTimeout(timer); timer = setTimeout(() => clicks=0, 800);
@@ -623,158 +624,78 @@
                 Swal.fire({
                     title:'管理員登入', input:'password', showCancelButton:true
                 }).then(r => {
-                    if(r.value === 'admin') initAdmin(); 
+                    if(r.value === 'admin') fetchAdminLogs(); 
                     else if(r.value) Swal.fire('密碼錯誤', '', 'error');
                 });
                 clicks = 0;
             }
         });
 
-        async function initAdmin() {
-            document.getElementById('admin-modal').classList.remove('hidden');
+        async function fetchAdminLogs() {
+            const tbody = document.getElementById('admin-log-body');
             const hint = document.getElementById('admin-source-hint');
-            hint.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:2px;margin:0"></div> 正在同步雲端資料...';
-            
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="loader"></div></td></tr>';
+            document.getElementById('admin-modal').classList.remove('hidden');
+
             let logs = [];
+            
             if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
                 try {
                     const res = await fetch(GOOGLE_SHEET_CSV_URL);
                     const csvText = await res.text();
-                    logs = parseCSV(csvText);
+                    logs = parseCSV(csvText); 
                     hint.innerText = "資料來源：Google 雲端試算表 (即時連線)";
                     hint.classList.add("text-green-600");
                 } catch (e) {
-                    hint.innerText = "雲端讀取失敗，顯示本機資料";
-                    logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                    console.error(e);
+                    hint.innerText = "雲端讀取失敗，請確認試算表已發布";
+                    hint.classList.remove("text-green-600");
                 }
             } else {
-                hint.innerText = "未設定雲端連結 (本機模式)";
-                logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                hint.innerText = "未設定雲端連結";
             }
-            adminAllLogs = logs;
-            renderAdminIPList();
-        }
 
-        function getNicknames() { return JSON.parse(localStorage.getItem('gh_ip_nicknames') || '{}'); }
-
-        function renderAdminIPList() {
-            document.getElementById('admin-back-btn').classList.add('hidden');
-            const content = document.getElementById('admin-content-area');
-            const nicknames = getNicknames();
-            
-            const groups = {};
-            adminAllLogs.forEach(l => {
-                const ip = l.ip || 'Unknown';
-                if (!groups[ip]) groups[ip] = { count: 0, totalScore: 0, scoreCount: 0, lastActive: l.date, device: l.device };
-                groups[ip].count++;
-                if (l.mode === '考卷模式' && l.result.includes('分')) {
-                    groups[ip].totalScore += parseInt(l.result);
-                    groups[ip].scoreCount++;
-                }
-                if (new Date(l.date) > new Date(groups[ip].lastActive)) groups[ip].lastActive = l.date;
-            });
-
-            const ipList = Object.keys(groups).sort((a,b) => new Date(groups[b].lastActive) - new Date(groups[a].lastActive));
-
-            let html = `
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr>
-                            <th class="p-3">使用者 (暱稱/IP)</th>
-                            <th class="p-3">裝置</th>
-                            <th class="p-3">次數</th>
-                            <th class="p-3">平均分</th>
-                            <th class="p-3">最後上線</th>
-                            <th class="p-3">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y">
-            `;
-            html += ipList.map(ip => {
-                const g = groups[ip];
-                const avg = g.scoreCount > 0 ? Math.round(g.totalScore / g.scoreCount) + '分' : '-';
-                const nick = nicknames[ip] || '';
-                const displayName = nick ? `<span class="font-bold text-blue-700">${nick}</span> <span class="text-xs text-gray-400">(${ip})</span>` : `<span class="font-mono text-gray-600">${ip}</span>`;
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3">
-                            ${displayName} <button onclick="editNickname('${ip}')" class="text-gray-400 hover:text-blue-500">✏️</button>
-                        </td>
-                        <td class="p-3 text-xs text-gray-500">${g.device}</td>
-                        <td class="p-3">${g.count}</td>
-                        <td class="p-3 font-bold ${avg!=='-' && parseInt(avg)>=60 ? 'text-green-600':'text-gray-500'}">${avg}</td>
-                        <td class="p-3 text-xs text-gray-500">${g.lastActive}</td>
-                        <td class="p-3">
-                            <button onclick="renderAdminDetail('${ip}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">詳細</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            html += `</tbody></table>`;
-            content.innerHTML = html;
-        }
-
-        function editNickname(ip) {
-            const nicknames = getNicknames();
-            Swal.fire({
-                title: '設定暱稱', text: `IP: ${ip}`, input: 'text', inputValue: nicknames[ip] || '', showCancelButton: true
-            }).then(r => {
-                if (r.isConfirmed) {
-                    nicknames[ip] = r.value;
-                    localStorage.setItem('gh_ip_nicknames', JSON.stringify(nicknames));
-                    renderAdminIPList();
-                }
-            });
-        }
-
-        function renderAdminDetail(targetIp) {
-            document.getElementById('admin-back-btn').classList.remove('hidden');
-            const content = document.getElementById('admin-content-area');
-            const nicknames = getNicknames();
-            const nick = nicknames[targetIp] || targetIp;
-            const userLogs = adminAllLogs.filter(l => l.ip === targetIp);
-
-            let html = `
-                <div class="mb-4 text-lg font-bold text-gray-700"><span class="text-blue-600">${nick}</span> 的紀錄</div>
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr><th class="p-3">時間</th><th class="p-3">科目</th><th class="p-3">模式</th><th class="p-3">結果</th></tr>
-                    </thead>
-                    <tbody class="divide-y">
-            `;
-            html += userLogs.map(l => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 text-gray-500">${l.date}</td>
-                    <td class="p-3 font-bold">${l.subject}</td>
-                    <td class="p-3 text-xs">${l.mode}</td>
-                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
-                </tr>
-            `).join('');
-            html += `</tbody></table>`;
-            content.innerHTML = html;
+            renderAdminTable(logs);
         }
 
         function parseCSV(csv) {
-            const lines = csv.split('\n').slice(1);
+            const lines = csv.split('\n').slice(1); 
             return lines.map(line => {
                 const cols = line.split(','); 
-                //cols[6] 讀取第7欄 (0-based index)
                 if(cols.length < 5) return null;
                 return {
-                    date: cols[0].replace(/"/g, ''),
+                    date: cols[0].replace(/"/g, ''), 
                     ip: cols[1]?.replace(/"/g, '') || '-',
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
                     mode: cols[4]?.replace(/"/g, '') || '-',
-                    result: cols[6]?.replace(/"/g, '') || '-' // 關鍵修改
+                    result: cols[6]?.replace(/"/g, '') || '-'
                 };
             }).filter(x => x);
         }
 
+        function renderAdminTable(logs) {
+            const tbody = document.getElementById('admin-log-body');
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
+            } else {
+                tbody.innerHTML = logs.map(l => `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-4 text-gray-500 text-xs">${l.date}</td>
+                        <td class="p-4 text-xs font-mono text-gray-400">${l.ip}</td>
+                        <td class="p-4 text-sm">${l.device}</td>
+                        <td class="p-4 font-bold text-gray-700">${l.subject}</td>
+                        <td class="p-4 text-sm">${l.mode}</td>
+                        <td class="p-4 font-bold text-blue-600">${l.result}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
         function clearLogs() {
-            if(confirm('清空本機快取？')) { 
+            if(confirm('這只會清空「本機」的快取，雲端試算表的資料請去 Google Sheets 刪除。確定嗎？')) { 
                 localStorage.removeItem('gh_admin_logs_local'); 
-                alert('已清空');
+                alert('本機快取已清空');
             }
         }
     </script>
