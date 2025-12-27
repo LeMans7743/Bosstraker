@@ -519,7 +519,7 @@
             const lines = csv.split('\n').slice(1); // 去掉標題
             return lines.map(line => {
                 const cols = line.split(','); 
-                // Google Form 順序: Timestamp, IP, Device, Subject, Mode, Result, Date
+                // Google Form 順序: Timestamp, IP, Device, Subject, Mode, Date, Result
                 if(cols.length < 5) return null;
                 // 注意：CSV 內容可能包含引號，這裡做簡易處理
                 return {
@@ -527,8 +527,8 @@
                     ip: cols[1]?.replace(/"/g, '') || '-',
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
-                    mode: cols[4]?.replace(/"/g, '') || '-',
-                    result: cols[5]?.replace(/"/g, '') || '-'
+                    result: cols[5]?.replace(/"/g, '') || '-',
+                    mode: cols[4]?.replace(/"/g, '') || '-'
                 };
             }).filter(x => x);
         }
