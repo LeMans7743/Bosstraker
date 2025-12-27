@@ -22,12 +22,17 @@
         #next-trigger-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 100; cursor: pointer;
-            background: rgba(0,0,0,0.05); /* 微微的灰色讓使用者知道不能按選項了 */
+            background: rgba(0,0,0,0); /* 透明，但可點擊 */
             display: none;
         }
-        .tap-hint {
-            position: absolute; bottom: 50px; width: 100%; text-align: center;
-            color: #64748b; font-weight: bold; animation: bounce 1s infinite;
+        /* 提示文字動畫 */
+        .tap-hint-box {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            pointer-events: none; /* 讓點擊穿透到 layer */
+        }
+        .tap-hint-text {
+            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
         }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
@@ -117,8 +122,8 @@
         </div>
 
         <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
-            <div class="tap-hint">
-                <p>點擊螢幕任意處進入下一題 ▼</p>
+            <div class="tap-hint-box">
+                <span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span>
             </div>
         </div>
 
@@ -137,6 +142,7 @@
                 <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <div class="overflow-auto flex-grow p-4">
+                <p class="text-xs text-gray-500 mb-4 text-center">這裡只顯示您目前使用這台裝置的紀錄</p>
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-100 text-gray-600">
                         <tr>
@@ -155,7 +161,10 @@
     <div id="admin-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-                <h2 class="text-xl font-bold text-gray-800">後台管理系統 (所有紀錄)</h2>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">後台管理系統 (所有紀錄)</h2>
+                    <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">資料來源：本機暫存 (未連線雲端)</p>
+                </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <div class="overflow-auto flex-grow">
@@ -173,13 +182,34 @@
                     <tbody id="admin-log-body" class="divide-y"></tbody>
                 </table>
             </div>
-            <div class="p-4 border-t bg-gray-50 rounded-b-xl text-right">
-                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition">清空所有紀錄</button>
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
+                <span class="text-xs text-gray-400">顯示最近 100 筆</span>
+                <button onclick="clearLogs()" class="text-red-500 hover:text-red-700 font-bold px-4 py-2 hover:bg-red-50 rounded transition">清空本機暫存紀錄</button>
             </div>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        //  【雲端資料庫設定區】
+        //   若要收集所有人的資料，請建立 Google Form 並填寫以下資訊。
+        //   若留空，系統將自動使用 LocalStorage (僅記錄本機)。
+        // ==========================================
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScqZn3A4HLzNL-a8_u2Y_jCYqiEnQy6Vn5Tv2Y8STrod4u9gw/viewform?usp=dialog"; // 範例: "https://docs.google.com/forms/d/e/XXXXXX/formResponse"
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1dN9fl0tSZNoGQAY0NUQGYP58M-P4waez9avrHITgo8Y/edit?resourcekey=&gid=1791614047#gid=1791614047"; // 範例: "https://docs.google.com/spreadsheets/d/e/XXXXXX/pub?output=csv"
+        
+        // 請填入 Google Form 對應欄位的 entry ID (如 entry.123456)
+        const FORM_IDS = {
+            ip:      "entry.214623373", // 請替換
+            device:  "entry.1194870592", // 請替換
+            subject: "entry.1570979862", // 請替換
+            mode:    "entry.610680044", // 請替換
+            result:  "entry.705527857", // 請替換
+            date:    "entry.40424165"  // 請替換
+        };
+        // ==========================================
+
+
         // --- 全域變數 ---
         let currentQuestions = [];
         let currentSubjectName = "";
@@ -189,15 +219,15 @@
         let timerInterval;
         let practiceCorrectCount = 0; 
         let isRetryMode = false;
-        let userIP = "查無 IP";
+        let userIP = "Loading...";
 
-        // 嘗試抓取 IP
+        // 嘗試抓取使用者 IP
         fetch('https://api.ipify.org?format=json')
             .then(res => res.json())
             .then(data => userIP = data.ip)
-            .catch(e => console.log('IP Fetch failed'));
+            .catch(e => userIP = "無法取得 IP");
 
-        // --- 核心功能 1: 讀取題庫 (不動) ---
+        // --- 核心功能 1: 讀取題庫 ---
         async function prepareExam(mode) {
             const subjectCode = document.getElementById('subject-select').value;
             const subjectText = document.getElementById('subject-select').options[document.getElementById('subject-select').selectedIndex].text;
@@ -310,7 +340,7 @@
             let score = Math.round(correct * (100 / currentQuestions.length));
             if(correct === currentQuestions.length) score = 100;
 
-            saveBothLogs('考卷模式', `${score}分`);
+            saveLog('考卷模式', `${score}分`);
             
             Swal.fire({ 
                 title: '測驗結果', 
@@ -324,7 +354,7 @@
             }).then(() => location.reload());
         }
 
-        // --- 練習模式 (點其他區域下一題) ---
+        // --- 練習模式 (點擊任意處下一題) ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
@@ -344,7 +374,7 @@
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
             
-            // 隱藏全螢幕點擊層
+            // 隱藏全螢幕點擊層，避免還沒答題就點到下一題
             document.getElementById('next-trigger-layer').style.display = 'none';
 
             q.options.forEach((opt, i) => {
@@ -364,10 +394,11 @@
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
             
-            // 顯示全螢幕點擊層 (允許點擊下一題)
+            // 顯示全螢幕透明點擊層
+            // 使用 setTimeout 避免使用者連點導致誤觸下一題
             setTimeout(() => {
                 document.getElementById('next-trigger-layer').style.display = 'block';
-            }, 100); // 稍微延遲避免誤觸
+            }, 100); 
 
             if(userAns === correctAns) {
                 practiceCorrectCount++;
@@ -390,13 +421,16 @@
             if(++currentQIndex < currentQuestions.length) {
                 renderPracticeQ();
             } else {
-                saveBothLogs(isRetryMode ? '錯題複習' : '練習模式', `${practiceCorrectCount}/${currentQuestions.length} 題`);
+                const label = isRetryMode ? '錯題複習' : '練習模式';
+                const res = `${practiceCorrectCount}/${currentQuestions.length} 題`;
+                saveLog(label, res);
+                
                 Swal.fire({
                     title: '練習結束',
                     html: `
                         <div class="text-center">
-                            <h2 class="text-4xl font-bold text-blue-600">${practiceCorrectCount} / ${currentQuestions.length}</h2>
-                            <p class="text-gray-500 mt-2">點擊畫面任意處或按鈕回首頁</p>
+                            <h2 class="text-4xl font-bold text-blue-600">${res}</h2>
+                            <p class="text-gray-500 mt-2">點擊按鈕回首頁</p>
                         </div>
                     `, 
                     icon: 'success'
@@ -404,7 +438,7 @@
             }
         }
 
-        // --- 錯題管理 ---
+        // --- 錯題管理 (Local) ---
         function saveWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             if (!db[subject]) db[subject] = [];
@@ -422,51 +456,56 @@
             }
         }
 
-        // --- 紀錄系統 (雙重紀錄) ---
-        function saveBothLogs(modeStr, resultStr) {
+        // --- 紀錄系統 (本地 + 雲端) ---
+        function saveLog(modeStr, resultStr) {
             const now = new Date().toLocaleString();
+            const deviceType = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "Mobile/Tablet" : "Desktop";
             
-            // 1. 存個人紀錄 (User Only)
+            // 1. 存個人紀錄 (LocalStorage - 使用者自己看)
             const userLogs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
-            userLogs.unshift({ 
-                date: now, 
-                subject: currentSubjectName, 
-                mode: modeStr,
-                result: resultStr 
-            });
+            userLogs.unshift({ date: now, subject: currentSubjectName, mode: modeStr, result: resultStr });
             localStorage.setItem('gh_user_history_v1', JSON.stringify(userLogs));
 
-            // 2. 存後台紀錄 (Admin All)
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "手機/平板" : "電腦";
-            const adminLogs = JSON.parse(localStorage.getItem('gh_admin_logs_v1') || '[]');
-            adminLogs.unshift({
-                date: now,
-                ip: userIP,
-                device: isMobile,
-                subject: currentSubjectName,
-                mode: modeStr,
-                result: resultStr,
-                ua: navigator.userAgent // 紀錄詳細 User Agent
-            });
-            localStorage.setItem('gh_admin_logs_v1', JSON.stringify(adminLogs));
+            // 2. 存後台紀錄 (嘗試上傳 Google Form)
+            if (GOOGLE_FORM_URL && GOOGLE_FORM_URL.startsWith('http')) {
+                // 雲端模式
+                const formData = new FormData();
+                formData.append(FORM_IDS.ip, userIP);
+                formData.append(FORM_IDS.device, deviceType);
+                formData.append(FORM_IDS.subject, currentSubjectName);
+                formData.append(FORM_IDS.mode, modeStr);
+                formData.append(FORM_IDS.result, resultStr);
+                formData.append(FORM_IDS.date, now);
+
+                fetch(GOOGLE_FORM_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 重要：避免 CORS 錯誤
+                    body: formData
+                }).catch(err => console.error("Cloud upload failed", err));
+            } else {
+                // 單機模式 (存 LocalStorage 給管理員看 - 僅限本機)
+                const adminLogs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                adminLogs.unshift({
+                    date: now, ip: userIP, device: deviceType, 
+                    subject: currentSubjectName, mode: modeStr, result: resultStr
+                });
+                localStorage.setItem('gh_admin_logs_local', JSON.stringify(adminLogs));
+            }
         }
 
         // --- 顯示個人紀錄 ---
         function showUserRecords() {
             const logs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
             const tbody = document.getElementById('user-record-body');
-            if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無個人紀錄</td></tr>';
-            } else {
-                tbody.innerHTML = logs.map(l => `
-                    <tr class="hover:bg-gray-50 border-b">
-                        <td class="p-3 text-gray-500 text-xs">${l.date}</td>
-                        <td class="p-3 font-bold text-gray-700">${l.subject}</td>
-                        <td class="p-3 text-sm">${l.mode}</td>
-                        <td class="p-3 font-bold text-blue-600">${l.result}</td>
-                    </tr>
-                `).join('');
-            }
+            tbody.innerHTML = logs.length ? logs.map(l => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-3 text-gray-500 text-xs">${l.date}</td>
+                    <td class="p-3 font-bold text-gray-700">${l.subject}</td>
+                    <td class="p-3 text-sm">${l.mode}</td>
+                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
+                </tr>
+            `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
+            
             document.getElementById('user-record-modal').classList.remove('hidden');
         }
 
@@ -478,18 +517,68 @@
                 Swal.fire({
                     title:'管理員登入', input:'password', showCancelButton:true
                 }).then(r => {
-                    if(r.value === 'admin') showAdminLogs(); 
+                    if(r.value === 'admin') fetchAdminLogs(); 
                     else if(r.value) Swal.fire('密碼錯誤', '', 'error');
                 });
                 clicks = 0;
             }
         });
 
-        function showAdminLogs() {
-            const logs = JSON.parse(localStorage.getItem('gh_admin_logs_v1') || '[]');
+        async function fetchAdminLogs() {
+            const tbody = document.getElementById('admin-log-body');
+            const hint = document.getElementById('admin-source-hint');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center"><div class="loader"></div></td></tr>';
+            document.getElementById('admin-modal').classList.remove('hidden');
+
+            let logs = [];
+            
+            // 嘗試讀取雲端 CSV
+            if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.startsWith('http')) {
+                try {
+                    const res = await fetch(GOOGLE_SHEET_CSV_URL);
+                    const csvText = await res.text();
+                    logs = parseCSV(csvText); // 自定義解析
+                    hint.innerText = "資料來源：Google 雲端試算表 (即時連線)";
+                    hint.classList.add("text-green-600");
+                } catch (e) {
+                    console.error(e);
+                    hint.innerText = "雲端讀取失敗，顯示本機資料";
+                    logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                }
+            } else {
+                // 讀取本機
+                logs = JSON.parse(localStorage.getItem('gh_admin_logs_local') || '[]');
+                hint.innerText = "資料來源：本機暫存 (未設定雲端連結)";
+                hint.classList.remove("text-green-600");
+            }
+
+            renderAdminTable(logs);
+        }
+
+        function parseCSV(csv) {
+            // 簡單 CSV 解析 (假設 Google Sheets 格式)
+            const lines = csv.split('\n').slice(1); // 去掉標題
+            return lines.map(line => {
+                // 處理逗號分隔 (簡易版)
+                const cols = line.split(','); 
+                // Google Form 順序: Timestamp, IP, Device, Subject, Mode, Result, Date
+                // 注意：這裡需根據您的實際欄位順序調整，通常 Form 會自動加 Timestamp 在第一欄
+                if(cols.length < 5) return null;
+                return {
+                    date: cols[0].replace(/"/g, ''), // Timestamp
+                    ip: cols[1]?.replace(/"/g, '') || '-',
+                    device: cols[2]?.replace(/"/g, '') || '-',
+                    subject: cols[3]?.replace(/"/g, '') || '-',
+                    mode: cols[4]?.replace(/"/g, '') || '-',
+                    result: cols[5]?.replace(/"/g, '') || '-'
+                };
+            }).filter(x => x);
+        }
+
+        function renderAdminTable(logs) {
             const tbody = document.getElementById('admin-log-body');
             if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">尚無全域紀錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">尚無紀錄</td></tr>';
             } else {
                 tbody.innerHTML = logs.map(l => `
                     <tr class="hover:bg-gray-50 border-b">
@@ -502,13 +591,12 @@
                     </tr>
                 `).join('');
             }
-            document.getElementById('admin-modal').classList.remove('hidden');
         }
 
         function clearLogs() {
-            if(confirm('警告：確定要清空所有考生的後台紀錄嗎？')) { 
-                localStorage.removeItem('gh_admin_logs_v1'); 
-                showAdminLogs(); 
+            if(confirm('確定要清空「本機」紀錄嗎？(雲端資料需至 Google Sheet 刪除)')) { 
+                localStorage.removeItem('gh_admin_logs_local'); 
+                fetchAdminLogs(); 
             }
         }
     </script>
