@@ -10,7 +10,6 @@
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #f8fafc; user-select: none; }
         .hidden { display: none; }
-        
         /* 選項卡片 */
         .option-card { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .option-card:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
@@ -18,29 +17,42 @@
         .wrong { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b; }
         
         /* 科目選擇卡片 (首頁) */
-        .subject-card {
-            cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
-            text-align: center; transition: all 0.2s; background: white;
+        .subject-card { 
+            cursor: pointer; border: 2px solid #e2e8f0; border-radius: 0.75rem; 
+            padding: 1rem; text-align: center; transition: all 0.2s; background: white;
+            position: relative; overflow: hidden;
         }
-        .subject-card:hover { border-color: #93c5fd; }
-        .subject-card.active { border-color: #2563eb; background-color: #eff6ff; color: #1d4ed8; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
+        .subject-card:hover { border-color: #93c5fd; transform: translateY(-2px); }
+        .subject-card.active { border-color: #2563eb; background-color: #eff6ff; color: #1e40af; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .subject-card.active::after {
+            content: '✔'; position: absolute; top: 5px; right: 5px; 
+            background: #2563eb; color: white; width: 20px; height: 20px; 
+            border-radius: 50%; font-size: 12px; line-height: 20px;
+        }
 
-        /* 紀錄頁籤 (Tabs) */
-        .tab-btn {
-            padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #64748b;
-        }
-        .tab-btn:hover { background-color: #f1f5f9; }
-        .tab-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
-        /* 模式切換按鈕 */
-        .mode-switch-btn {
-            flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #94a3b8;
-        }
-        .mode-switch-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        /* 紀錄頁籤按鈕 */
+        .tab-btn { @apply px-4 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition; }
+        .tab-btn.active { @apply text-blue-600 border-blue-600; }
+        
+        .mode-pill { @apply px-4 py-1.5 rounded-full text-sm font-bold border transition cursor-pointer text-center flex-1; }
+        .mode-pill.active { @apply bg-gray-800 text-white border-gray-800; }
+        .mode-pill.inactive { @apply bg-white text-gray-500 border-gray-300 hover:bg-gray-50; }
 
         /* 載入動畫 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 全螢幕點擊層 */
+        #next-trigger-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; cursor: pointer; background: rgba(0,0,0,0); display: none;
+        }
+        .tap-hint-box { position: absolute; bottom: 40px; width: 100%; text-align: center; pointer-events: none; }
+        .tap-hint-text {
+            background-color: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.9rem; display: inline-block; animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
@@ -59,13 +71,26 @@
             
             <div class="mb-8">
                 <label class="block text-gray-700 font-bold mb-3">選擇科目</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="subject-selection-area">
-                    <div class="subject-card active" onclick="selectSubject('chinese', this)">國文</div>
-                    <div class="subject-card" onclick="selectSubject('english', this)">英文</div>
-                    <div class="subject-card" onclick="selectSubject('politics', this)">政治</div>
-                    <div class="subject-card" onclick="selectSubject('military', this)">軍事</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="subject-grid">
+                    <div class="subject-card active" onclick="selectSubject('chinese', '國文', this)">
+                        <div class="text-2xl mb-1">📖</div>
+                        <div class="font-bold">國文</div>
+                    </div>
+                    <div class="subject-card" onclick="selectSubject('english', '英文', this)">
+                        <div class="text-2xl mb-1">ABC</div>
+                        <div class="font-bold">英文</div>
+                    </div>
+                    <div class="subject-card" onclick="selectSubject('politics', '政治', this)">
+                        <div class="text-2xl mb-1">⚖️</div>
+                        <div class="font-bold">政治</div>
+                    </div>
+                    <div class="subject-card" onclick="selectSubject('military', '軍事', this)">
+                        <div class="text-2xl mb-1">🛡️</div>
+                        <div class="font-bold">軍事</div>
+                    </div>
                 </div>
-                <input type="hidden" id="subject-select" value="chinese">
+                <input type="hidden" id="selected-subject-code" value="chinese">
+                <input type="hidden" id="selected-subject-text" value="國文">
             </div>
 
             <div class="mb-8">
@@ -122,59 +147,68 @@
                     <h3 class="text-xl font-bold mb-8 text-gray-800 leading-relaxed" id="practice-q-text">Loading...</h3>
                     <div id="practice-options" class="space-y-4"></div>
                 </div>
-                
                 <div id="practice-feedback" class="hidden mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200"></div>
             </div>
         </div>
 
+        <div id="next-trigger-layer" onclick="nextPracticeQuestion()">
+            <div class="tap-hint-box"><span class="tap-hint-text">點擊螢幕任意處進入下一題 ▼</span></div>
+        </div>
+
     </main>
 
+    <footer class="text-center text-gray-400 py-8 text-xs pb-24">
+        <p id="secret-trigger" class="cursor-default select-none inline-block px-4 py-2 hover:text-gray-300 transition">© 2025 Online Exam System.</p>
+    </footer>
+
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
+        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-cyan-50 rounded-t-xl">
                 <h2 class="text-xl font-bold text-cyan-800">我的考試紀錄</h2>
-                <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
+                <button onclick="closeUserModal()" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             
-            <div class="flex border-b bg-gray-50">
-                <div class="mode-switch-btn active" onclick="setUserRecMode('exam', this)">測驗模式 (分數)</div>
-                <div class="mode-switch-btn" onclick="setUserRecMode('practice', this)">練習模式 (題數)</div>
-            </div>
-
-            <div class="p-4 bg-white border-b">
-                <div class="flex flex-wrap gap-2 justify-center" id="user-rec-subject-tabs">
-                    <button class="tab-btn active" onclick="setUserRecSubject('chinese', this)">國文</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('english', this)">英文</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('politics', this)">政治</button>
-                    <button class="tab-btn" onclick="setUserRecSubject('military', this)">軍事</button>
+            <div class="p-4 bg-gray-50 border-b flex flex-col gap-4">
+                <div class="flex gap-2 bg-white p-1 rounded-full border shadow-sm">
+                    <div id="tab-mode-exam" onclick="setUserRecordMode('exam')" class="mode-pill active">測驗模式 (分數)</div>
+                    <div id="tab-mode-practice" onclick="setUserRecordMode('practice')" class="mode-pill inactive">練習模式 (題數)</div>
                 </div>
-            </div>
 
-            <div class="flex-grow overflow-hidden flex flex-col">
-                <div class="p-2 text-right bg-gray-50 border-b flex justify-between items-center px-4">
-                    <span class="text-xs text-gray-500" id="rec-status-text">顯示資料...</span>
+                <div class="flex space-x-1 overflow-x-auto border-b border-gray-200">
+                    <button onclick="setUserRecordSubject('chinese')" class="tab-btn active" data-subj="chinese">國文</button>
+                    <button onclick="setUserRecordSubject('english')" class="tab-btn" data-subj="english">英文</button>
+                    <button onclick="setUserRecordSubject('politics')" class="tab-btn" data-subj="politics">政治</button>
+                    <button onclick="setUserRecordSubject('military')" class="tab-btn" data-subj="military">軍事</button>
+                </div>
+
+                <div class="flex justify-between items-center mt-1">
+                    <select id="user-sort" class="border rounded px-3 py-1 text-sm bg-white" onchange="renderUserRecords()">
+                        <option value="date-desc">日期 (新→舊)</option>
+                        <option value="date-asc">日期 (舊→新)</option>
+                    </select>
                     <div class="flex bg-white rounded-lg border overflow-hidden">
-                        <button onclick="switchUserView('list')" id="btn-view-list" class="px-3 py-1 text-xs bg-blue-100 text-blue-700 font-bold">列表</button>
-                        <button onclick="switchUserView('chart')" id="btn-view-chart" class="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">圖表</button>
+                        <button id="btn-view-list" onclick="switchUserView('list')" class="px-4 py-1 text-sm bg-blue-100 text-blue-700 font-bold">列表</button>
+                        <button id="btn-view-chart" onclick="switchUserView('chart')" class="px-4 py-1 text-sm text-gray-600 hover:bg-gray-100">圖表</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="overflow-auto p-4 flex-grow relative">
-                    <div id="user-view-list">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-100 text-gray-600">
-                                <tr>
-                                    <th class="p-3">日期</th>
-                                    <th class="p-3">科目</th>
-                                    <th class="p-3">結果</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-record-body" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                    <div id="user-view-chart" class="hidden h-64 w-full">
-                        <canvas id="userChartCanvas"></canvas>
-                    </div>
+            <div class="overflow-auto flex-grow p-4">
+                <div id="user-view-list">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-100 text-gray-600">
+                            <tr>
+                                <th class="p-3">時間</th>
+                                <th class="p-3">科目</th>
+                                <th class="p-3">模式</th>
+                                <th class="p-3">結果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-record-body" class="divide-y"></tbody>
+                    </table>
+                </div>
+                <div id="user-view-chart" class="hidden h-64 sm:h-80 relative w-full">
+                    <canvas id="userChartCanvas"></canvas>
                 </div>
             </div>
         </div>
@@ -189,11 +223,9 @@
                 </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            
             <div class="overflow-auto flex-grow p-4">
                 <div id="admin-content-area"></div>
             </div>
-
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
                 <button id="admin-back-btn" onclick="renderAdminIPList()" class="hidden text-blue-600 font-bold hover:underline">← 返回使用者列表</button>
                 <div class="flex-grow"></div>
@@ -204,7 +236,7 @@
 
     <script>
         // ==========================================
-        //  【雲端資料庫設定區】
+        //  【雲端資料庫設定區 - 已保留您的設定】
         // ==========================================
         const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScqZn3A4HLzNL-a8_u2Y_jCYqiEnQy6Vn5Tv2Y8STrod4u9gw/formResponse";
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ28Z7fBJziaSJ5EQVCAlK_AVz8zM4KQL-8kCmiPGqjlpxuSw3pGKY0ZuVi5AHfV3WnlQzhI998yDuN/pub?output=csv";
@@ -220,46 +252,39 @@
 
         // --- 全域變數 ---
         let currentQuestions = [];
-        let currentSubjectName = "國文"; // 預設
-        let currentSubjectCode = "chinese"; // 預設
+        let currentSubjectName = "";
+        let currentSubjectCode = "";
         let currentMode = "";
         let currentQIndex = 0;
         let timerInterval;
         let practiceCorrectCount = 0; 
         let isRetryMode = false;
         let userIP = "Loading...";
-        
-        // 紀錄頁面狀態
-        let curRecSubject = '國文';
-        let curRecMode = '考卷模式'; 
-        let userViewMode = 'list';
         let userChartInstance = null;
         let adminAllLogs = [];
 
-        // 嘗試抓取 IP
-        fetch('https://api.ipify.org?format=json')
-            .then(res => res.json())
-            .then(data => userIP = data.ip)
-            .catch(e => userIP = "無法取得 IP");
+        // 紀錄查詢狀態變數
+        let recordModeFilter = 'exam'; // 'exam' or 'practice'
+        let recordSubjectFilter = 'chinese'; // 預設國文
+        let recordViewMode = 'list';
 
-        // --- 首頁: 選擇科目 (按鈕互動) ---
-        function selectSubject(code, el) {
-            document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json()).then(data => userIP = data.ip).catch(e => userIP = "無法取得 IP");
+
+        // --- UI 互動: 首頁選擇科目 ---
+        function selectSubject(code, text, el) {
+            // 更新變數
+            document.getElementById('selected-subject-code').value = code;
+            document.getElementById('selected-subject-text').value = text;
+            // 更新 UI 樣式
+            document.querySelectorAll('.subject-card').forEach(card => card.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('subject-select').value = code;
-            currentSubjectCode = code;
-            currentSubjectName = el.innerText;
         }
 
         // --- 核心功能 1: 讀取題庫 ---
         async function prepareExam(mode) {
-            const subjectCode = document.getElementById('subject-select').value;
-            // 重新確認 Subject Name
-            const cards = document.querySelectorAll('.subject-card');
-            cards.forEach(c => {
-                if(c.classList.contains('active')) currentSubjectName = c.innerText;
-            });
-
+            const subjectCode = document.getElementById('selected-subject-code').value;
+            const subjectText = document.getElementById('selected-subject-text').value;
             const qCount = parseInt(document.getElementById('question-count').value);
             
             document.getElementById('action-buttons').classList.add('hidden');
@@ -269,19 +294,18 @@
                 const response = await fetch(`questions/${subjectCode}.json`);
                 if (!response.ok) throw new Error(`Error ${response.status}`);
                 const allQuestions = await response.json();
-                
                 if (!Array.isArray(allQuestions) || allQuestions.length === 0) throw new Error("題庫為空");
 
                 const actualCount = Math.min(qCount, allQuestions.length);
                 currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, actualCount);
                 
+                currentSubjectName = subjectText;
                 currentSubjectCode = subjectCode;
                 isRetryMode = false;
 
                 document.getElementById('setup-view').classList.add('hidden');
                 if (mode === 'exam') startExamMode();
                 else startPracticeMode();
-
             } catch (error) {
                 console.error(error);
                 Swal.fire({
@@ -294,14 +318,9 @@
             }
         }
 
-        // --- 錯題模式 ---
         function startRetryMode() {
-            const subjectCode = document.getElementById('subject-select').value;
-             const cards = document.querySelectorAll('.subject-card');
-            cards.forEach(c => {
-                if(c.classList.contains('active')) currentSubjectName = c.innerText;
-            });
-
+            const subjectCode = document.getElementById('selected-subject-code').value;
+            const subjectText = document.getElementById('selected-subject-text').value;
             const wrongDB = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
             const wrongList = wrongDB[subjectCode] || [];
 
@@ -311,6 +330,7 @@
             }
 
             currentQuestions = wrongList.sort(() => 0.5 - Math.random());
+            currentSubjectName = subjectText;
             currentSubjectCode = subjectCode;
             isRetryMode = true;
 
@@ -334,8 +354,7 @@
                     <div class="space-y-2 pl-2">
                         ${q.options.map((opt, i) => {
                             const val = ["A","B","C","D"][i];
-                            return `
-                            <label class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer group">
+                            return `<label class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer group">
                                 <input type="radio" name="q_${idx}" value="${val}" class="mt-1 w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
                                 <span class="text-gray-600 group-hover:text-gray-900 transition">${opt}</span>
                             </label>`;
@@ -358,39 +377,30 @@
             clearInterval(timerInterval);
             let correct = 0;
             let wrongCount = 0;
-            
             currentQuestions.forEach((q, idx) => {
                 const ans = document.querySelector(`input[name="q_${idx}"]:checked`)?.value;
                 if(ans === q.ans) correct++;
-                else {
-                    wrongCount++;
-                    saveWrongQuestion(currentSubjectCode, q);
-                }
+                else { wrongCount++; saveWrongQuestion(currentSubjectCode, q); }
             });
-            
             let score = Math.round(correct * (100 / currentQuestions.length));
             if(correct === currentQuestions.length) score = 100;
 
             saveLog('考卷模式', `${score}分`);
-            
             Swal.fire({ 
                 title: '測驗結果', 
-                html: `
-                    <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
-                    <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
-                    ${wrongCount > 0 ? `<div class="text-red-500 text-sm">已將 ${wrongCount} 題錯題加入複習庫</div>` : ''}
-                `, 
+                html: `<div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
+                       <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
+                       ${wrongCount > 0 ? `<div class="text-red-500 text-sm">已將 ${wrongCount} 題錯題加入複習庫</div>` : ''}`, 
                 icon: score >= 60 ? 'success' : 'warning',
                 confirmButtonText: '確定'
             }).then(() => location.reload());
         }
 
-        // --- 練習模式 (自動跳轉) ---
+        // --- 練習模式 ---
         function startPracticeMode() {
             currentMode = 'practice';
             document.getElementById('practice-mode-view').classList.remove('hidden');
             document.getElementById('mode-badge').innerText = isRetryMode ? "錯題複習" : "練習模式";
-            
             currentQIndex = 0;
             practiceCorrectCount = 0;
             renderPracticeQ();
@@ -400,7 +410,6 @@
             const q = currentQuestions[currentQIndex];
             document.getElementById('practice-progress').innerText = `題目 ${currentQIndex+1} / ${currentQuestions.length}`;
             document.getElementById('practice-q-text').innerText = q.q;
-            
             const optsDiv = document.getElementById('practice-options');
             optsDiv.innerHTML = '';
             document.getElementById('practice-feedback').classList.add('hidden');
@@ -427,15 +436,11 @@
                 if(isRetryMode) removeWrongQuestion(currentSubjectCode, questionObj);
             } else {
                 el.classList.add('wrong');
-                feedback.innerHTML = `
-                    <div class="text-red-600 font-bold mb-1">回答錯誤</div>
-                    <div class="text-gray-600">正確答案是：<b class="text-green-600 text-lg">${correctAns}</b></div>
-                `;
+                feedback.innerHTML = `<div class="text-red-600 font-bold mb-1">回答錯誤</div><div class="text-gray-600">正確答案是：<b class="text-green-600 text-lg">${correctAns}</b></div>`;
                 const correctIdx = ["A","B","C","D"].indexOf(correctAns);
                 if (correctIdx !== -1) document.getElementById('practice-options').children[correctIdx].classList.add('correct');
                 saveWrongQuestion(currentSubjectCode, questionObj);
             }
-
             setTimeout(() => { nextPracticeQuestion(); }, 1000);
         }
 
@@ -454,26 +459,24 @@
             }
         }
 
-        // --- 資料儲存 ---
-        function saveWrongQuestion(subjectCode, qObj) {
+        function saveWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
-            if (!db[subjectCode]) db[subjectCode] = [];
-            if (!db[subjectCode].some(item => item.q === qObj.q)) {
-                db[subjectCode].push(qObj);
+            if (!db[subject]) db[subject] = [];
+            if (!db[subject].some(item => item.q === qObj.q)) {
+                db[subject].push(qObj);
                 localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
             }
         }
-        function removeWrongQuestion(subjectCode, qObj) {
+        function removeWrongQuestion(subject, qObj) {
             const db = JSON.parse(localStorage.getItem('gh_wrong_questions_v1') || '{}');
-            if (db[subjectCode]) {
-                db[subjectCode] = db[subjectCode].filter(item => item.q !== qObj.q);
+            if (db[subject]) {
+                db[subject] = db[subject].filter(item => item.q !== qObj.q);
                 localStorage.setItem('gh_wrong_questions_v1', JSON.stringify(db));
             }
         }
         function saveLog(modeStr, resultStr) {
             const now = new Date().toLocaleString();
             const deviceType = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "Mobile/Tablet" : "Desktop";
-            
             const userLogs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
             userLogs.unshift({ date: now, subject: currentSubjectName, mode: modeStr, result: resultStr });
             localStorage.setItem('gh_user_history_v1', JSON.stringify(userLogs));
@@ -490,7 +493,7 @@
             }
         }
 
-        // ==========================================
+ // ==========================================
         //  【我的考試紀錄 - 新版邏輯】
         // ==========================================
         function showUserRecords() {
@@ -616,8 +619,9 @@
             });
         }
 
+
         // ==========================================
-        //  【後台管理】
+        //  【後台管理 - IP 分類與暱稱】
         // ==========================================
         let clicks = 0, timer;
         document.getElementById('secret-trigger').addEventListener('click', () => {
@@ -676,51 +680,30 @@
                 }
                 if (new Date(l.date) > new Date(groups[ip].lastActive)) groups[ip].lastActive = l.date;
             });
-
             const ipList = Object.keys(groups).sort((a,b) => new Date(groups[b].lastActive) - new Date(groups[a].lastActive));
 
-            let html = `
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr>
-                            <th class="p-3">使用者 (暱稱/IP)</th>
-                            <th class="p-3">裝置</th>
-                            <th class="p-3">次數</th>
-                            <th class="p-3">平均分</th>
-                            <th class="p-3">最後上線</th>
-                            <th class="p-3">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y">
-            `;
+            let html = `<table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">使用者</th><th class="p-3">裝置</th><th class="p-3">次數</th><th class="p-3">平均分</th><th class="p-3">最後上線</th><th class="p-3">操作</th></tr></thead><tbody class="divide-y">`;
             html += ipList.map(ip => {
                 const g = groups[ip];
                 const avg = g.scoreCount > 0 ? Math.round(g.totalScore / g.scoreCount) + '分' : '-';
                 const nick = nicknames[ip] || '';
-                const displayName = nick ? `<span class="font-bold text-blue-700">${nick}</span> <span class="text-xs text-gray-400">(${ip})</span>` : `<span class="font-mono text-gray-600">${ip}</span>`;
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3">
-                            ${displayName} <button onclick="editNickname('${ip}')" class="text-gray-400 hover:text-blue-500">✏️</button>
-                        </td>
-                        <td class="p-3 text-xs text-gray-500">${g.device}</td>
-                        <td class="p-3">${g.count}</td>
-                        <td class="p-3 font-bold ${avg!=='-' && parseInt(avg)>=60 ? 'text-green-600':'text-gray-500'}">${avg}</td>
-                        <td class="p-3 text-xs text-gray-500">${g.lastActive}</td>
-                        <td class="p-3">
-                            <button onclick="renderAdminDetail('${ip}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">詳細</button>
-                        </td>
-                    </tr>
-                `;
+                const display = nick ? `<span class="font-bold text-blue-700">${nick}</span> <span class="text-xs text-gray-400">(${ip})</span>` : `<span class="font-mono text-gray-600">${ip}</span>`;
+                return `<tr class="hover:bg-gray-50">
+                    <td class="p-3">${display}<button onclick="editNickname('${ip}')" class="ml-2 text-gray-400 hover:text-blue-500">✏️</button></td>
+                    <td class="p-3 text-xs text-gray-500">${g.device}</td>
+                    <td class="p-3">${g.count}</td>
+                    <td class="p-3 font-bold ${avg!=='-'&&parseInt(avg)>=60?'text-green-600':'text-gray-500'}">${avg}</td>
+                    <td class="p-3 text-xs text-gray-500">${g.lastActive}</td>
+                    <td class="p-3"><button onclick="renderAdminDetail('${ip}')" class="bg-blue-100 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">詳細</button></td>
+                </tr>`;
             }).join('');
-            html += `</tbody></table>`;
-            content.innerHTML = html;
+            content.innerHTML = html + `</tbody></table>`;
         }
 
         function editNickname(ip) {
             const nicknames = getNicknames();
             Swal.fire({
-                title: '設定暱稱', text: `IP: ${ip}`, input: 'text', inputValue: nicknames[ip] || '', showCancelButton: true
+                title: '設定暱稱', text: `為 IP: ${ip} 設定名字`, input: 'text', inputValue: nicknames[ip] || '', showCancelButton: true
             }).then(r => {
                 if (r.isConfirmed) {
                     nicknames[ip] = r.value;
@@ -737,24 +720,9 @@
             const nick = nicknames[targetIp] || targetIp;
             const userLogs = adminAllLogs.filter(l => l.ip === targetIp);
 
-            let html = `
-                <div class="mb-4 text-lg font-bold text-gray-700"><span class="text-blue-600">${nick}</span> 的紀錄</div>
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-600">
-                        <tr><th class="p-3">時間</th><th class="p-3">科目</th><th class="p-3">模式</th><th class="p-3">結果</th></tr>
-                    </thead>
-                    <tbody class="divide-y">
-            `;
-            html += userLogs.map(l => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 text-gray-500">${l.date}</td>
-                    <td class="p-3 font-bold">${l.subject}</td>
-                    <td class="p-3 text-xs">${l.mode}</td>
-                    <td class="p-3 font-bold text-blue-600">${l.result}</td>
-                </tr>
-            `).join('');
-            html += `</tbody></table>`;
-            content.innerHTML = html;
+            let html = `<div class="mb-4 text-lg font-bold text-gray-700"><span class="text-blue-600">${nick}</span> 的詳細紀錄</div><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">時間</th><th class="p-3">科目</th><th class="p-3">模式</th><th class="p-3">結果</th></tr></thead><tbody class="divide-y">`;
+            html += userLogs.map(l => `<tr class="hover:bg-gray-50"><td class="p-3 text-gray-500">${l.date}</td><td class="p-3 font-bold">${l.subject}</td><td class="p-3 text-xs">${l.mode}</td><td class="p-3 font-bold text-blue-600">${l.result}</td></tr>`).join('');
+            content.innerHTML = html + `</tbody></table>`;
         }
 
         function parseCSV(csv) {
@@ -768,15 +736,14 @@
                     device: cols[2]?.replace(/"/g, '') || '-',
                     subject: cols[3]?.replace(/"/g, '') || '-',
                     mode: cols[4]?.replace(/"/g, '') || '-',
-                    result: cols[6]?.replace(/"/g, '') || '-'
+                    result: cols[5]?.replace(/"/g, '') || '-'
                 };
             }).filter(x => x);
         }
 
         function clearLogs() {
-            if(confirm('清空本機快取？')) { 
-                localStorage.removeItem('gh_admin_logs_local'); 
-                alert('已清空');
+            if(confirm('這只會清空「本機」的快取，雲端試算表的資料請去 Google Sheets 刪除。確定嗎？')) { 
+                localStorage.removeItem('gh_admin_logs_local'); alert('本機快取已清空');
             }
         }
     </script>
