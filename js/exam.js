@@ -5,7 +5,7 @@ function startExamMode() {
     document.getElementById('exam-mode-view').classList.remove('hidden');
     document.getElementById('exam-info').innerText = `${currentSubjectName} (共 ${currentQuestions.length} 題)`;
     
-    // 清空並隱藏檢討區
+    // 清空並隱藏檢討區，顯示題目區與交卷按鈕
     document.getElementById('exam-questions-container').classList.remove('hidden');
     document.getElementById('exam-review-container').classList.add('hidden');
     document.getElementById('exam-submit-bar').classList.remove('hidden');
@@ -53,10 +53,17 @@ function submitExam() {
         } else {
             wrongCount++;
             saveWrongQuestion(currentSubjectCode, q); // 存入錯題庫
+            
+            // --- 關鍵修改：取得正確答案的文字內容 ---
+            const optionMap = ["A", "B", "C", "D"];
+            const correctIdx = optionMap.indexOf(q.ans);
+            const correctText = (correctIdx !== -1) ? q.options[correctIdx] : "無法讀取";
+
             wrongDetails.push({
                 q: q.q,
                 user: userAns || "未作答",
                 ans: q.ans,
+                ansText: correctText, // 新增這個欄位儲存文字
                 idx: idx + 1
             });
         }
@@ -73,7 +80,7 @@ function submitExam() {
         html: `
             <div class="text-5xl font-bold text-blue-600 mb-2">${score}分</div>
             <div class="text-gray-500 mb-2">答對 ${correct} / ${currentQuestions.length} 題</div>
-            ${wrongCount > 0 ? `<div class="text-red-500 text-sm mt-2">下方已顯示錯誤題目與正解</div>` : '<div class="text-green-600 font-bold mt-2">太強了！全對！</div>'}
+            ${wrongCount > 0 ? `<div class="text-red-500 text-sm mt-2">下方已顯示錯誤題目與完整解析</div>` : '<div class="text-green-600 font-bold mt-2">太強了！全對！</div>'}
         `, 
         icon: score >= 60 ? 'success' : 'warning',
         confirmButtonText: '查看結果'
@@ -103,14 +110,22 @@ function showExamReview(wrongDetails) {
                     <span class="text-red-600 font-bold text-sm">Q${w.idx}</span>
                     <p class="font-bold text-gray-800">${w.q}</p>
                 </div>
-                <div class="flex gap-4 text-sm mt-3 bg-gray-50 p-3 rounded">
+                <div class="flex flex-col sm:flex-row gap-4 text-sm mt-3 bg-gray-50 p-4 rounded border border-gray-100">
                     <div class="flex-1">
-                        <span class="block text-gray-500 text-xs">你的答案</span>
-                        <span class="font-bold ${w.user===w.ans ? 'text-green-600' : 'text-red-600'}">${w.user}</span>
+                        <span class="block text-gray-500 text-xs mb-1">您的回答</span>
+                        <span class="font-bold text-lg ${w.user===w.ans ? 'text-green-600' : 'text-red-600'}">
+                            ${w.user}
+                        </span>
                     </div>
-                    <div class="flex-1 border-l pl-4">
-                        <span class="block text-gray-500 text-xs">正確答案</span>
-                        <span class="font-bold text-green-600 text-lg">${w.ans}</span>
+                    
+                    <div class="flex-[3] border-l-0 sm:border-l sm:pl-4 border-gray-200 mt-2 sm:mt-0">
+                        <span class="block text-gray-500 text-xs mb-1">正確答案</span>
+                        <div class="text-green-700">
+                            <span class="font-bold text-xl mr-2 align-middle">${w.ans}</span>
+                            <span class="font-medium align-middle bg-green-100 px-2 py-1 rounded text-green-800">
+                                ${w.ansText}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
