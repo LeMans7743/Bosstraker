@@ -58,11 +58,16 @@
                 <button onclick="startRetryMode()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
                     複習此科目的錯題
                 </button>
-                <button onclick="showUserRecords()" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
+                
+                <button onclick="initBankMode()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
+                    📖 瀏覽完整題庫
+                </button>
+
+                <button onclick="showUserRecords()" class="col-span-1 sm:col-span-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
                     我的考試紀錄
                 </button>
             </div>
-        </div>
+
 
         <div id="exam-mode-view" class="hidden">
             <div class="bg-white p-4 rounded-lg shadow-md mb-6 sticky top-20 z-40 flex justify-between items-center border-l-4 border-blue-600">
