@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="min-h-screen flex flex-col text-gray-800 relative">
@@ -67,7 +68,11 @@
                     我的考試紀錄
                 </button>
             </div>
-
+            
+            <p class="text-center text-gray-400 text-sm mt-6">
+                請確保 `questions/` 資料夾中已有對應的 .json 題庫檔
+            </p>
+        </div>
 
         <div id="exam-mode-view" class="hidden">
             <div class="bg-white p-4 rounded-lg shadow-md mb-6 sticky top-20 z-40 flex justify-between items-center border-l-4 border-blue-600">
@@ -101,6 +106,7 @@
                 <span id="practice-progress" class="text-gray-500 font-medium"></span>
                 <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold" id="mode-badge">練習模式</span>
             </div>
+            
             <div class="bg-white p-8 rounded-2xl shadow-xl min-h-[400px] flex flex-col relative mb-20 transition-all duration-300" id="practice-card">
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold mb-8 text-gray-800 leading-relaxed" id="practice-q-text">Loading...</h3>
@@ -110,11 +116,32 @@
                 <div id="practice-feedback" class="hidden mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200"></div>
                 <div id="practice-hint-text" class="hidden text-center text-gray-400 text-sm mt-2 animate-pulse">(點擊任意處繼續)</div>
             </div>
+            </div>
+
+        <div id="bank-mode-view" class="hidden">
+            <div class="sticky top-20 z-40 bg-gray-100/95 backdrop-blur py-2 -mx-4 px-4 shadow-sm mb-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <h2 class="text-lg font-bold text-purple-700" id="bank-subject-title">完整題庫</h2>
+                    
+                    <div class="flex w-full sm:w-auto gap-2">
+                        <input type="text" id="bank-search" oninput="handleBankSearch()" placeholder="搜尋題目關鍵字..." class="flex-grow border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                        <button onclick="exitBankMode()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 whitespace-nowrap">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bank-list-container" class="space-y-4 pb-24">
+                </div>
+            
+            <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="fixed bottom-6 right-6 bg-purple-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-purple-700 z-50 opacity-80 hover:opacity-100">
+                ↑
+            </button>
         </div>
+
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
-        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition">
+        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition" title="連續點擊 3 次開啟後台">
             © 2025 Online Exam System.
         </p>
     </footer>
@@ -125,10 +152,12 @@
                 <h2 class="text-xl font-bold text-cyan-800">我的考試紀錄</h2>
                 <button onclick="document.getElementById('user-record-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
+            
             <div class="flex border-b bg-gray-50">
                 <div class="mode-switch-btn active" onclick="setUserRecMode('exam', this)">測驗模式 (分數)</div>
                 <div class="mode-switch-btn" onclick="setUserRecMode('practice', this)">練習模式 (題數)</div>
             </div>
+
             <div class="p-4 bg-white border-b">
                 <div class="flex flex-wrap gap-2 justify-center" id="user-rec-subject-tabs">
                     <button class="tab-btn active" onclick="setUserRecSubject('chinese', this)">國文</button>
@@ -137,6 +166,7 @@
                     <button class="tab-btn" onclick="setUserRecSubject('military', this)">軍事</button>
                 </div>
             </div>
+
             <div class="flex-grow overflow-hidden flex flex-col">
                 <div class="p-2 text-right bg-gray-50 border-b flex justify-between items-center px-4">
                     <span class="text-xs text-gray-500" id="rec-status-text">顯示資料...</span>
@@ -145,25 +175,42 @@
                         <button onclick="switchUserView('chart')" id="btn-view-chart" class="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">圖表</button>
                     </div>
                 </div>
+
                 <div class="overflow-auto p-4 flex-grow relative">
                     <div id="user-view-list">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">日期</th><th class="p-3">科目</th><th class="p-3">結果</th></tr></thead>
+                            <thead class="bg-gray-100 text-gray-600">
+                                <tr>
+                                    <th class="p-3">日期</th>
+                                    <th class="p-3">科目</th>
+                                    <th class="p-3">結果</th>
+                                </tr>
+                            </thead>
                             <tbody id="user-record-body" class="divide-y"></tbody>
                         </table>
                     </div>
-                    <div id="user-view-chart" class="hidden h-64 w-full"><canvas id="userChartCanvas"></canvas></div>
+                    <div id="user-view-chart" class="hidden h-64 w-full">
+                        <canvas id="userChartCanvas"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
     <div id="admin-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-                <div><h2 class="text-xl font-bold text-gray-800">後台管理系統</h2><p class="text-xs text-gray-400 mt-1" id="admin-source-hint">初始化中...</p></div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">後台管理系統</h2>
+                    <p class="text-xs text-gray-400 mt-1" id="admin-source-hint">初始化中...</p>
+                </div>
                 <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="text-3xl text-gray-400 hover:text-gray-600">&times;</button>
             </div>
-            <div class="overflow-auto flex-grow p-4"><div id="admin-content-area"></div></div>
+            
+            <div class="overflow-auto flex-grow p-4">
+                <div id="admin-content-area"></div>
+            </div>
+
             <div class="p-4 border-t bg-gray-50 rounded-b-xl flex justify-between items-center">
                 <button id="admin-back-btn" onclick="renderAdminIPList()" class="hidden text-blue-600 font-bold hover:underline">← 返回使用者列表</button>
                 <div class="flex-grow"></div>
@@ -178,8 +225,7 @@
     <script src="js/practice.js"></script>
     <script src="js/record.js"></script>
     <script src="js/admin.js"></script>
-    <script src="js/bank.js"></script> 
-</body>
+    <script src="js/bank.js"></script>
 
 </body>
 </html>
