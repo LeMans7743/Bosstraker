@@ -63,7 +63,6 @@ function renderBankList(questions) {
     const container = document.getElementById('bank-list-container');
     const searchVal = document.getElementById('bank-search').value.trim().toLowerCase();
 
-    // 如果有搜尋文字，進行過濾
     const filtered = searchVal 
         ? questions.filter(q => q.q.toLowerCase().includes(searchVal))
         : questions;
@@ -73,23 +72,24 @@ function renderBankList(questions) {
         return;
     }
 
-    // 渲染 HTML
+    // --- 新增：字體判斷 ---
+    const qFontClass = (currentSubjectCode === 'english') ? "font-english" : "text-lg";
+    const optFontClass = (currentSubjectCode === 'english') ? "font-english" : "";
+
     container.innerHTML = filtered.map((q, idx) => {
-        // 找出正確選項的索引 (0=A, 1=B...)
         const ansIdx = ["A","B","C","D"].indexOf(q.ans);
         
         return `
         <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition group">
             <div class="flex gap-3 mb-2">
                 <span class="text-xs font-bold text-gray-400 mt-1">#${idx + 1}</span>
-                <p class="font-bold text-lg text-gray-800 leading-relaxed">${highlightText(q.q, searchVal)}</p>
+                <p class="font-bold text-gray-800 leading-relaxed ${qFontClass}">${highlightText(q.q, searchVal)}</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2 mt-3">
                 ${q.options.map((opt, i) => {
                     const label = ["A","B","C","D"][i];
                     const isAns = (label === q.ans);
-                    // 如果是答案：綠色背景+粗體；如果不是：灰色
                     const styleClass = isAns 
                         ? "bg-green-100 border-green-300 text-green-800 font-bold ring-1 ring-green-500" 
                         : "bg-gray-50 border-gray-100 text-gray-500";
@@ -97,7 +97,7 @@ function renderBankList(questions) {
                     return `
                     <div class="flex items-center p-2 rounded border ${styleClass}">
                         <span class="w-6 h-6 flex justify-center items-center rounded-full bg-white text-xs border mr-2 shadow-sm ${isAns?'border-green-400 text-green-700':'border-gray-300'}">${label}</span>
-                        <span>${opt}</span>
+                        <span class="${optFontClass}">${opt}</span>
                         ${isAns ? '<span class="ml-auto text-xs bg-green-600 text-white px-2 py-0.5 rounded-full">正解</span>' : ''}
                     </div>
                     `;
@@ -107,6 +107,7 @@ function renderBankList(questions) {
         `;
     }).join('');
 }
+
 
 // 搜尋關鍵字高亮工具
 function highlightText(text, keyword) {

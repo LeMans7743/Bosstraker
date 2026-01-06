@@ -15,11 +15,16 @@ function startExamMode() {
     document.getElementById('exam-submit-bar').classList.remove('hidden');
 
     const container = document.getElementById('exam-questions-container');
+
+    // --- 新增：判斷是否為英文科目 ---
+    const qFontClass = (currentSubjectCode === 'english') ? "font-english" : "text-lg";
+    const optFontClass = (currentSubjectCode === 'english') ? "font-english" : "";
+
     container.innerHTML = currentQuestions.map((q, idx) => `
         <div id="q-card-${idx}" class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
             <div class="flex gap-2 mb-3">
                 <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded h-fit">Q${idx+1}</span>
-                <p class="font-bold text-lg text-gray-800 leading-relaxed">${q.q}</p>
+                <p class="font-bold text-gray-800 leading-relaxed ${qFontClass}">${q.q}</p>
             </div>
             <div class="space-y-2 pl-2">
                 ${q.options.map((opt, i) => {
@@ -27,7 +32,7 @@ function startExamMode() {
                     return `
                     <label class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer group">
                         <input type="radio" name="q_${idx}" value="${val}" class="mt-1 w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="text-gray-600 group-hover:text-gray-900 transition">${opt}</span>
+                        <span class="text-gray-600 group-hover:text-gray-900 transition ${optFontClass}">${opt}</span>
                     </label>`;
                 }).join('')}
             </div>
@@ -43,6 +48,7 @@ function startExamMode() {
         document.getElementById('exam-timer').innerText = `${min}:${s}`;
     }, 1000);
 }
+
 
 function submitExam() {
     // 1. 防呆檢查

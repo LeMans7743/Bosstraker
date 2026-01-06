@@ -54,7 +54,17 @@ function startPracticeMode() {
 function renderPracticeQ() {
     const q = currentQuestions[currentQIndex];
     document.getElementById('practice-progress').innerText = `題目 ${currentQIndex+1} / ${currentQuestions.length}`;
-    document.getElementById('practice-q-text').innerText = q.q;
+    
+    // --- 新增：字體判斷 ---
+    const qTextEl = document.getElementById('practice-q-text');
+    if (currentSubjectCode === 'english') {
+        qTextEl.classList.add('font-english');
+        qTextEl.classList.remove('text-xl'); // 移除原本的大小設定，改用 CSS 定義的
+    } else {
+        qTextEl.classList.remove('font-english');
+        qTextEl.classList.add('text-xl');
+    }
+    qTextEl.innerText = q.q;
     
     const optsDiv = document.getElementById('practice-options');
     optsDiv.innerHTML = '';
@@ -65,12 +75,16 @@ function renderPracticeQ() {
     q.options.forEach((opt, i) => {
         const val = ["A","B","C","D"][i];
         const btn = document.createElement('div');
+        // --- 修改：選項字體 ---
+        const optFont = (currentSubjectCode === 'english') ? "font-english" : "";
+        
         btn.className = "option-card bg-gray-50 p-4 rounded-xl flex items-center text-gray-700 font-medium";
-        btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm flex-shrink-0">${val}</span>${opt}`;
+        btn.innerHTML = `<span class="w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center mr-4 text-sm font-bold shadow-sm flex-shrink-0">${val}</span><span class="${optFont}">${opt}</span>`;
         btn.onclick = () => checkPractice(btn, val, q.ans, q);
         optsDiv.appendChild(btn);
     });
 }
+
 
 function checkPractice(el, userAns, correctAns, questionObj) {
     // 鎖定所有按鈕防止連點
