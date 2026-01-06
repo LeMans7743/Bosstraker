@@ -16,10 +16,20 @@ const FORM_IDS = {
 // --- 全域變數 (Shared State) ---
 let currentQuestions = [];
 let currentSubjectName = ""; 
-let currentSubjectCode = ""; // 移除預設值
+let currentSubjectCode = ""; 
 let currentMode = "";
 let isRetryMode = false;
 let userIP = "Loading...";
+
+// --- 新增：總測驗模式變數 ---
+let isFullExamMode = false;     // 是否正在進行總測驗
+let fullExamStep = 0;           // 目前考到第幾科 (0:國文, 1:英文, 2:軍政)
+let fullExamScores = [];        // 儲存各科成績
+const FULL_EXAM_CONFIG = [
+    { code: 'chinese', name: '國文', count: 50 },
+    { code: 'english', name: '英文', count: 50 },
+    { code: 'mix_mil_pol', name: '軍事與政治', count: 50 }
+];
 
 // 嘗試抓取 IP
 fetch('https://api.ipify.org?format=json')
