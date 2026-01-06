@@ -21,33 +21,31 @@ let currentMode = "";
 let isRetryMode = false;
 let userIP = "Loading...";
 
-// --- 新增：總測驗模式變數 ---
-let isFullExamMode = false;     // 是否正在進行總測驗
-let fullExamStep = 0;           // 目前考到第幾科 (0:國文, 1:英文, 2:軍政)
-let fullExamScores = [];        // 儲存各科成績
+// --- 總測驗模式變數 ---
+let isFullExamMode = false;     
+let fullExamStep = 0;           
+let fullExamScores = [];        
+let fullExamWrongDetails = [];  // [新增] 用來儲存三科所有錯題
+
 const FULL_EXAM_CONFIG = [
     { code: 'chinese', name: '國文', count: 50 },
     { code: 'english', name: '英文', count: 50 },
     { code: 'mix_mil_pol', name: '軍事與政治', count: 50 }
 ];
 
-// 嘗試抓取 IP
 fetch('https://api.ipify.org?format=json')
     .then(res => res.json())
     .then(data => userIP = data.ip)
     .catch(e => userIP = "無法取得 IP");
 
-// 共用工具：儲存 Log
 function saveLog(modeStr, resultStr) {
     const now = new Date().toLocaleString();
     const deviceType = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "Mobile/Tablet" : "Desktop";
     
-    // 存本機
     const userLogs = JSON.parse(localStorage.getItem('gh_user_history_v1') || '[]');
     userLogs.unshift({ date: now, subject: currentSubjectName, mode: modeStr, result: resultStr });
     localStorage.setItem('gh_user_history_v1', JSON.stringify(userLogs));
 
-    // 存雲端
     if (GOOGLE_FORM_URL && GOOGLE_FORM_URL.startsWith('http')) {
         const formData = new FormData();
         formData.append(FORM_IDS.ip, userIP);
