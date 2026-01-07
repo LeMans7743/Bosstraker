@@ -10,7 +10,7 @@
     
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="min-h-screen flex flex-col text-gray-800 relative">
+<body class="min-h-screen flex flex-col text-gray-800 relative bg-gray-50">
 
     <div id="click-overlay" class="hidden fixed inset-0 z-[100] cursor-pointer" style="background: rgba(0,0,0,0);"></div>
 
@@ -23,58 +23,76 @@
 
     <main class="container mx-auto p-4 flex-grow max-w-4xl">
         <div id="setup-view" class="bg-white p-8 rounded-xl shadow-lg mt-6">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 border-b pb-4">測驗設定</h2>
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 border-b pb-4">請選擇測驗科目</h2>
             
-            <div class="mb-8">
-                <label class="block text-gray-700 font-bold mb-3">選擇科目 <span class="text-red-500 text-sm font-normal">(必選)</span></label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="subject-selection-area">
-                    <div class="subject-card" onclick="selectSubject('chinese', this)">國文</div>
-                    <div class="subject-card" onclick="selectSubject('english', this)">英文</div>
-                    <div class="subject-card" onclick="selectSubject('politics', this)">政治</div>
-                    <div class="subject-card" onclick="selectSubject('military', this)">軍事</div>
-                    <div class="subject-card col-span-2 sm:col-span-2 border-indigo-200 text-indigo-600 font-bold" onclick="selectSubject('mix_mil_pol', this)">
-                        軍事 & 政治 (綜合)
-                    </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8" id="subject-selection-area">
+                <div class="subject-card py-6 text-lg hover:scale-105 transform transition duration-200 shadow-sm" onclick="openModeMenu('chinese', '國文')">
+                    <div class="text-4xl mb-2">📜</div> 國文
                 </div>
-                <input type="hidden" id="subject-select" value="">
+                <div class="subject-card py-6 text-lg hover:scale-105 transform transition duration-200 shadow-sm" onclick="openModeMenu('english', '英文')">
+                    <div class="text-4xl mb-2">🔤</div> 英文
+                </div>
+                <div class="subject-card py-6 text-lg hover:scale-105 transform transition duration-200 shadow-sm" onclick="openModeMenu('politics', '政治')">
+                    <div class="text-4xl mb-2">⚖️</div> 政治
+                </div>
+                <div class="subject-card py-6 text-lg hover:scale-105 transform transition duration-200 shadow-sm" onclick="openModeMenu('military', '軍事')">
+                    <div class="text-4xl mb-2">🪖</div> 軍事
+                </div>
+                <div class="subject-card col-span-2 sm:col-span-2 border-indigo-200 text-indigo-600 font-bold py-6 text-lg hover:scale-105 transform transition duration-200 shadow-sm" onclick="openModeMenu('mix_mil_pol', '軍事 & 政治')">
+                    <div class="text-4xl mb-2">⚔️</div> 軍事 & 政治 (綜合)
+                </div>
             </div>
 
-            <div class="mb-8">
-                <label class="block text-gray-700 font-bold mb-2">題目數量</label>
-                <input type="number" id="question-count" value="50" min="1" class="w-full border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 transition">
+            <input type="hidden" id="subject-select" value="">
+
+            <hr class="border-gray-200 my-6">
+
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="startFullMockExam()" class="bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-md transition transform hover:-translate-y-1 border-2 border-white ring-2 ring-fuchsia-100 flex items-center justify-center gap-2">
+                    <span>🔥</span> 總測驗 (全科模擬考)
+                </button>
+                <button onclick="showUserRecords()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-lg transition">
+                    📊 查看我的考試紀錄
+                </button>
             </div>
 
-            <div id="loading-spinner" class="hidden text-center py-4">
+            <div id="loading-spinner" class="hidden text-center py-10">
                 <div class="loader"></div>
-                <p class="text-gray-500 animate-pulse">正在讀取題庫...</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="action-buttons">
-                <button onclick="prepareExam('exam')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
-                    進入考卷模式 (計分)
-                </button>
-                <button onclick="prepareExam('practice')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1">
-                    進入練習模式 (即時)
-                </button>
-                
-                <button onclick="startFullMockExam()" class="sm:col-span-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:-translate-y-1 border-2 border-white ring-2 ring-fuchsia-300">
-                    🔥 總測驗 (全科模擬)
-                </button>
-
-                <button onclick="startRetryMode()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
-                    複習此科目的錯題
-                </button>
-                <button onclick="initBankMode()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
-                    📖 瀏覽完整題庫
-                </button>
-                <button onclick="showUserRecords()" class="col-span-1 sm:col-span-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-1">
-                    我的考試紀錄
-                </button>
+                <p class="text-gray-500 animate-pulse mt-4">正在讀取題庫資料...</p>
             </div>
             
-            <p class="text-center text-gray-400 text-sm mt-6">
+            <p class="text-center text-gray-300 text-xs mt-8">
                 請確保 `questions/` 資料夾中已有對應的 .json 題庫檔
             </p>
+        </div>
+
+        <div id="mode-selection-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+            <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl transform transition-all scale-100 p-6 relative animate-fade-in-up">
+                <button onclick="closeModeMenu()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+                
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-1" id="modal-subject-title">國文</h3>
+                <p class="text-center text-gray-500 text-sm mb-6">請選擇測驗方式</p>
+
+                <div class="mb-6 bg-gray-50 p-3 rounded-lg">
+                    <label class="block text-gray-500 text-xs font-bold mb-1 ml-1">設定題數</label>
+                    <input type="number" id="question-count" value="50" min="1" class="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500 text-center font-bold text-lg">
+                </div>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <button onclick="prepareExam('exam'); closeModeMenu()" class="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition transform hover:scale-[1.02]">
+                        📝 考卷模式 <span class="text-xs font-normal opacity-80">(計分/限時)</span>
+                    </button>
+                    <button onclick="prepareExam('practice'); closeModeMenu()" class="flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow transition transform hover:scale-[1.02]">
+                        ⚡ 練習模式 <span class="text-xs font-normal opacity-80">(即時對答)</span>
+                    </button>
+                    <button onclick="initBankMode(); closeModeMenu()" class="flex items-center justify-center gap-3 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl shadow transition transform hover:scale-[1.02]">
+                        📖 瀏覽題庫 <span class="text-xs font-normal opacity-80">(背答案)</span>
+                    </button>
+                    <button onclick="startRetryMode(); closeModeMenu()" class="flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow transition transform hover:scale-[1.02]">
+                        💊 錯題複習 <span class="text-xs font-normal opacity-80">(專攻弱點)</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div id="exam-mode-view" class="hidden">
@@ -85,20 +103,13 @@
                     <span class="text-2xl font-mono font-bold text-blue-600" id="exam-timer">00:00</span>
                 </div>
             </div>
-            
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
-
             <div id="exam-review-container" class="hidden space-y-6 pb-24">
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                    <p class="font-bold text-yellow-800">錯題檢討</p>
-                    <p class="text-sm text-yellow-700">以下列出您本次測驗答錯的題目與正確答案。</p>
-                </div>
                 <div id="exam-review-list" class="space-y-4"></div>
                 <div class="text-center mt-8">
                     <button onclick="location.reload()" class="bg-gray-600 text-white px-8 py-3 rounded-full hover:bg-gray-700 font-bold shadow-lg">結束並返回首頁</button>
                 </div>
             </div>
-
             <div id="exam-submit-bar" class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-center z-40">
                 <button onclick="submitExam()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition text-lg w-full sm:w-auto">交卷並計算分數</button>
             </div>
@@ -136,7 +147,7 @@
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
-        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition" title="連續點擊 3 次開啟後台">© 2025 Online Exam System.</p>
+        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition">© 2025 Online Exam System.</p>
     </footer>
 
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
