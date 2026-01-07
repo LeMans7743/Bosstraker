@@ -105,6 +105,10 @@
             </div>
             <div id="exam-questions-container" class="space-y-6 pb-24"></div>
             <div id="exam-review-container" class="hidden space-y-6 pb-24">
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                    <p class="font-bold text-yellow-800">錯題檢討</p>
+                    <p class="text-sm text-yellow-700">以下列出您本次測驗答錯的題目與正確答案。</p>
+                </div>
                 <div id="exam-review-list" class="space-y-4"></div>
                 <div class="text-center mt-8">
                     <button onclick="location.reload()" class="bg-gray-600 text-white px-8 py-3 rounded-full hover:bg-gray-700 font-bold shadow-lg">結束並返回首頁</button>
@@ -147,7 +151,7 @@
     </main>
 
     <footer class="text-center text-gray-400 py-8 text-xs pb-24">
-        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition">© 2025 Online Exam System.</p>
+        <p id="secret-trigger" class="cursor-pointer select-none inline-block px-4 py-2 hover:text-gray-600 transition" title="連續點擊 3 次開啟後台">© 2025 Online Exam System.</p>
     </footer>
 
     <div id="user-record-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4">
@@ -188,6 +192,7 @@
             </div>
         </div>
     </div>
+
     <div id="admin-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
